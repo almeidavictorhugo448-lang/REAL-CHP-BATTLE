@@ -1,0 +1,63 @@
+name: Build REAL CHP BATTLE APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-android:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.1"
+
+      - name: Download Godot 4.7 editor and export templates
+        run: |
+          mkdir -p "$HOME/godot"
+          cd "$HOME/godot"
+          curl -L --fail -o godot.zip "https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          curl -L --fail -o templates.tpz "https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_export_templates.tpz"
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.7.stable"
+          unzip -q templates.tpz -d templates
+          if [ -d templates/templates ]; then
+            cp templates/templates/* "$HOME/.local/share/godot/export_templates/4.7.stable/"
+          else
+            find templates -type f -maxdepth 3 -exec cp {} "$HOME/.local/share/godot/export_templates/4.7.stable/" \;
+          fi
+          GODOT_BIN="$(find "$HOME/godot" -maxdepth 2 -type f -name 'Godot_v4.7-stable_linux.x86_64' | head -n 1)"
+          if [ -z "$GODOT_BIN" ]; then
+            GODOT_BIN="$(find "$HOME/godot" -maxdepth 2 -type f -name 'godot*' -executable | head -n 1)"
+          fi
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+
+      - name: Verify project
+        run: |
+          "$GODOT_BIN" --headless --path . --editor --quit
+
+      - name: Export APK
+        run: |
+          mkdir -p build
+          "$GODOT_BIN" --headless --path . --export-debug Android build/REAL_CHP_BATTLE.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: REAL-CHP-BATTLE-APK
+          path: build/REAL_CHP_BATTLE.apk
+          if-no-files-found: error
