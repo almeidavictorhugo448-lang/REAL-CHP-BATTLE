@@ -12,6 +12,25 @@ const START_TIME := 420.0
 var mode := "lobby"
 var selected := "Kosmos"
 var skin := "Original"
+
+# Arsenal REAL CHP BATTLE
+var active_weapon := "UMP"
+var weapon_catalog := ["UMP", "XM8", "Águia do Deserto", "M1014", "MP40"]
+var weapon_skin_catalog := ["Original", "Dragão de Fogo", "Gelo Eterno", "Ouro Imperial", "Neon Roxo"]
+var weapon_skin_owned := {
+    "UMP": ["Original"],
+    "XM8": ["Original"],
+    "Águia do Deserto": ["Original"],
+    "M1014": ["Original"],
+    "MP40": ["Original"]
+}
+var weapon_skin_equipped := {
+    "UMP": "Original",
+    "XM8": "Original",
+    "Águia do Deserto": "Original",
+    "M1014": "Original",
+    "MP40": "Original"
+}
 var player: CharacterBody3D
 var camera: Camera3D
 var bots: Array[CharacterBody3D] = []
@@ -168,11 +187,67 @@ func _pick_char(n:String) -> void: selected=n; skin=skins[n][0]; _characters()
 func _pick_skin(s:String) -> void: skin=s; _characters()
 
 func _inventory() -> void:
-    mode="inventory"; _reset_ui(); _bg(Color(0.012,0.02,0.03)); _txt(ui,"INVENTÁRIO",Vector2(28,25),Vector2(500,50),34); _txt(ui,"🪙 Moedas: %d"%coins,Vector2(30,78),Vector2(400,35),20)
-    var items=["UMP — EQUIPADA","Colete — Nível 2","Mochila — Nível 2","Kit Médico — %d"%medkits,"Gelo — 2","Munição — 120"]
-    for i in range(items.size()):
-        var p:=Panel.new(); p.position=Vector2(30+(i%2)*300,135+(i/2)*95); p.size=Vector2(275,78); p.add_theme_stylebox_override("panel",_style(Color(0.04,0.07,0.09),Color(0.18,0.34,0.40),14)); ui.add_child(p); _txt(p,items[i],Vector2(14,20),Vector2(245,35),17)
-    var back:=_btn(ui,"← VOLTAR",Vector2(30,get_viewport().size.y-72),Vector2(150,50),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
+    mode = "inventory"
+    _reset_ui()
+    _bg(Color(0.012, 0.02, 0.03))
+    _txt(ui, "ARSENAL • SKINS DE ARMAS", Vector2(25, 18), Vector2(700, 45), 29)
+    _txt(ui, "Moedas: %d" % coins, Vector2(28, 62), Vector2(350, 30), 19)
+    _txt(ui, "ESCOLHA SUA ARMA", Vector2(28, 101), Vector2(400, 30), 18)
+
+    var width := get_viewport().size.x
+    for i in range(weapon_catalog.size()):
+        var w: String = weapon_catalog[i]
+        var bw := width / 5.0 - 8.0
+        var b := _btn(ui, w, Vector2(8 + i * width / 5.0, 139), Vector2(bw, 46), Color(0.08, 0.50, 0.37) if active_weapon == w else Color(0.12, 0.25, 0.32))
+        b.pressed.connect(_select_weapon.bind(w))
+
+    _txt(ui, "SKINS • " + active_weapon.to_upper(), Vector2(25, 199), Vector2(500, 32), 21)
+    for i in range(weapon_skin_catalog.size()):
+        var sn: String = weapon_skin_catalog[i]
+        var owned: bool = sn in weapon_skin_owned[active_weapon]
+        var equipped: bool = weapon_skin_equipped[active_weapon] == sn
+        var y := 239 + i * 66
+        var panel := Panel.new()
+        panel.position = Vector2(24, y)
+        panel.size = Vector2(width - 48, 57)
+        var tint := Color(0.04, 0.08, 0.10)
+        match sn:
+            "Dragão de Fogo":
+                tint = Color(0.30, 0.07, 0.045)
+            "Gelo Eterno":
+                tint = Color(0.045, 0.18, 0.32)
+            "Ouro Imperial":
+                tint = Color(0.30, 0.22, 0.045)
+            "Neon Roxo":
+                tint = Color(0.20, 0.055, 0.30)
+        panel.add_theme_stylebox_override("panel", _style(tint, Color(0.20, 0.50, 0.52), 12))
+        ui.add_child(panel)
+        _txt(panel, sn, Vector2(12, 12), Vector2(240, 32), 17)
+        var label := "EQUIPADA" if equipped else ("EQUIPAR" if owned else "COMPRAR • 100 MOEDAS")
+        var btn := _btn(panel, label, Vector2(width - 260, 6), Vector2(220, 44), Color(0.08, 0.50, 0.37) if owned else Color(0.42, 0.24, 0.08))
+        btn.disabled = equipped
+        btn.pressed.connect(_weapon_skin_action.bind(sn))
+
+    var back := _btn(ui, "VOLTAR", Vector2(25, get_viewport().size.y - 62), Vector2(145, 45), Color(0.18, 0.20, 0.24))
+    back.pressed.connect(_lobby)
+
+func _select_weapon(w: String) -> void:
+    active_weapon = w
+    _inventory()
+
+func _weapon_skin_action(sn: String) -> void:
+    if sn in weapon_skin_owned[active_weapon]:
+        weapon_skin_equipped[active_weapon] = sn
+        _inventory()
+    elif coins >= 100:
+        coins -= 100
+        weapon_skin_owned[active_weapon].append(sn)
+        weapon_skin_equipped[active_weapon] = sn
+        _inventory()
+    else:
+        _toast("MOEDAS INSUFICIENTES!")
+        _inventory()
+
 
 func _settings() -> void:
     mode="settings"; _reset_ui(); _bg(Color(0.012,0.018,0.028)); _txt(ui,"CONFIGURAÇÕES",Vector2(28,25),Vector2(600,50),34); _txt(ui,"REAL CHP BATTLE v0.3",Vector2(30,82),Vector2(500,30),18)
@@ -381,7 +456,7 @@ func _pickup() -> void:
             loot.erase(a); a.queue_free(); _toast("PEGOU "+k)
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
-    ammo_text.text="UMP  %02d / %02d"%[ammo,MAG]
+    ammo_text.text="%s • %s  %02d / %02d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,MAG]
     top_text.text="RIVAIS %02d   |   TEMPO %03d"%[bots.size(),int(maxf(0,time_left))]
     zone_text.text="ZONA %.0fm"%zone
     ability.text="DRAGÃO %s"%(["PRONTO" if ability_cd<=0 else "%ds"%int(ceil(ability_cd))][0])
