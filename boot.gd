@@ -113,32 +113,78 @@ func _background():
     _rect(ui, Vector2(510, 600), Vector2(260, 9), Color("#0A131D"), 4)
 
 func _avatar(parent, center: Vector2, scale_factor: float, color: Color):
-    # Boneco estilizado em 2D; não é um modelo 3D.
-    var shadow = _rect(parent, center + Vector2(-60, 115) * scale_factor,
-        Vector2(120, 15) * scale_factor, Color("#101820"), 8)
+    var dark = color.darkened(0.52)
+    var accent = Color("#F5A623")
+    if skin in ["DRAGÃO NEGRO", "DRAGÃO DE FOGO"]:
+        accent = Color("#FF392E")
+    elif skin in ["GELO", "GELO ETERNO"]:
+        accent = Color("#55E8FF")
+    elif skin in ["OURO", "OURO IMPERIAL"]:
+        accent = Color("#FFD34E")
+    elif skin in ["NEON", "NEON ROXO"]:
+        accent = Color("#D65BFF")
 
-    var leg1 = _rect(parent, center + Vector2(-29, 48) * scale_factor,
-        Vector2(24, 75) * scale_factor, Color("#353D49"), 7)
-    var leg2 = _rect(parent, center + Vector2(8, 48) * scale_factor,
-        Vector2(24, 75) * scale_factor, Color("#353D49"), 7)
-    _rect(parent, center + Vector2(-35, 111) * scale_factor,
-        Vector2(37, 15) * scale_factor, Color("#D9DCE2"), 5)
-    _rect(parent, center + Vector2(4, 111) * scale_factor,
-        Vector2(37, 15) * scale_factor, Color("#D9DCE2"), 5)
+    # Sombra
+    _rect(parent, center + Vector2(-61, 112) * scale_factor,
+        Vector2(122, 17) * scale_factor, Color("#080F18"), 8)
 
-    _rect(parent, center + Vector2(-40, -25) * scale_factor,
-        Vector2(80, 85) * scale_factor, color, 12)
-    _rect(parent, center + Vector2(-54, -15) * scale_factor,
-        Vector2(18, 65) * scale_factor, color.darkened(0.18), 7)
-    _rect(parent, center + Vector2(36, -15) * scale_factor,
-        Vector2(18, 65) * scale_factor, color.darkened(0.18), 7)
+    # Pernas blindadas e botas
+    _rect(parent, center + Vector2(-30, 47) * scale_factor,
+        Vector2(25, 69) * scale_factor, dark, 5)
+    _rect(parent, center + Vector2(7, 47) * scale_factor,
+        Vector2(25, 69) * scale_factor, dark, 5)
+    _rect(parent, center + Vector2(-32, 71) * scale_factor,
+        Vector2(29, 12) * scale_factor, accent, 3)
+    _rect(parent, center + Vector2(5, 71) * scale_factor,
+        Vector2(29, 12) * scale_factor, accent, 3)
+    _rect(parent, center + Vector2(-38, 108) * scale_factor,
+        Vector2(42, 17) * scale_factor, Color("#D8DEE8"), 4)
+    _rect(parent, center + Vector2(2, 108) * scale_factor,
+        Vector2(42, 17) * scale_factor, Color("#D8DEE8"), 4)
 
-    _rect(parent, center + Vector2(-20, -67) * scale_factor,
-        Vector2(40, 42) * scale_factor, Color("#C78E70"), 12)
-    _rect(parent, center + Vector2(-22, -72) * scale_factor,
-        Vector2(44, 16) * scale_factor, Color("#171D29"), 8)
-    _rect(parent, center + Vector2(-8, -42) * scale_factor,
-        Vector2(16, 5) * scale_factor, Color("#202B3A"), 2)
+    # Braços e ombreiras
+    _rect(parent, center + Vector2(-57, -17) * scale_factor,
+        Vector2(23, 65) * scale_factor, dark, 7)
+    _rect(parent, center + Vector2(34, -17) * scale_factor,
+        Vector2(23, 65) * scale_factor, dark, 7)
+    _rect(parent, center + Vector2(-61, -24) * scale_factor,
+        Vector2(31, 25) * scale_factor, accent, 6)
+    _rect(parent, center + Vector2(30, -24) * scale_factor,
+        Vector2(31, 25) * scale_factor, accent, 6)
+
+    # Peitoral em camadas
+    _rect(parent, center + Vector2(-42, -29) * scale_factor,
+        Vector2(84, 83) * scale_factor, dark, 10)
+    _rect(parent, center + Vector2(-35, -26) * scale_factor,
+        Vector2(70, 70) * scale_factor, color, 8)
+    _rect(parent, center + Vector2(-28, -16) * scale_factor,
+        Vector2(56, 13) * scale_factor, accent, 3)
+    _rect(parent, center + Vector2(-11, 2) * scale_factor,
+        Vector2(22, 27) * scale_factor, dark, 4)
+    _rect(parent, center + Vector2(-7, 7) * scale_factor,
+        Vector2(14, 14) * scale_factor, accent, 3)
+
+    # Cabeça, capacete e visor
+    _rect(parent, center + Vector2(-21, -72) * scale_factor,
+        Vector2(42, 43) * scale_factor, Color("#B98268"), 10)
+    _rect(parent, center + Vector2(-25, -79) * scale_factor,
+        Vector2(50, 20) * scale_factor, dark, 7)
+    _rect(parent, center + Vector2(-20, -58) * scale_factor,
+        Vector2(40, 9) * scale_factor, Color("#101A2A"), 3)
+    _rect(parent, center + Vector2(-17, -56) * scale_factor,
+        Vector2(12, 4) * scale_factor, accent, 2)
+    _rect(parent, center + Vector2(5, -56) * scale_factor,
+        Vector2(12, 4) * scale_factor, accent, 2)
+
+    # Arma visível ao lado do personagem
+    _rect(parent, center + Vector2(43, 2) * scale_factor,
+        Vector2(15, 42) * scale_factor, Color("#111821"), 3)
+    _rect(parent, center + Vector2(38, -12) * scale_factor,
+        Vector2(24, 22) * scale_factor, Color("#242E3A"), 4)
+    _rect(parent, center + Vector2(44, -7) * scale_factor,
+        Vector2(12, 5) * scale_factor, accent, 2)
+    _rect(parent, center + Vector2(47, 22) * scale_factor,
+        Vector2(8, 19) * scale_factor, dark, 2)
 
 func _topbar():
     _rect(ui, Vector2(0, 0), Vector2(1280, 62), Color("#0A1422"), 0)
