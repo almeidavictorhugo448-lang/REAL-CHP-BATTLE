@@ -1,6 +1,6 @@
 extends Node3D
 
-# REAL CHP BATTLE v0.3 — lobby + character/skin system + playable battle royale prototype.
+# PUNK v1 — protótipo 3D em desenvolvimento.
 # Original assets and gameplay. Third-person mobile camera/control style.
 
 const MAX_HP := 200.0
@@ -158,13 +158,13 @@ func _style(bg:Color,border:Color,r:=16) -> StyleBoxFlat:
 func _lobby() -> void:
     mode="lobby"; _clear_world(); _reset_ui(); _bg(Color(0.006,0.010,0.018,1))
     var logo:=TextureRect.new(); logo.texture=load("res://assets/real_chapero.png"); logo.position=Vector2(get_viewport().size.x*0.33,28); logo.size=Vector2(220,220); logo.expand_mode=TextureRect.EXPAND_IGNORE_SIZE; logo.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED; ui.add_child(logo)
-    var title:=_txt(ui,"REAL CHP BATTLE",Vector2(0,255),Vector2(get_viewport().size.x,55),38); title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; title.add_theme_color_override("font_color",Color(0.78,0.90,1))
-    var sub:=_txt(ui,"BATTLE ROYALE • MOBILE",Vector2(0,304),Vector2(get_viewport().size.x,30),17); sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; sub.add_theme_color_override("font_color",Color(0.30,0.95,0.82))
+    var title:=_txt(ui,"PUNK",Vector2(0,145),Vector2(get_viewport().size.x,90),64); title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; title.add_theme_color_override("font_color",Color(0.78,0.90,1))
+    var sub:=_txt(ui,"V1 • 3D SHOOTER EM DESENVOLVIMENTO",Vector2(0,304),Vector2(get_viewport().size.x,30),17); sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; sub.add_theme_color_override("font_color",Color(0.30,0.95,0.82))
     var play:=_btn(ui,"▶  JOGAR",Vector2(get_viewport().size.x/2-170,355),Vector2(340,64),Color(0.08,0.50,0.37)); play.pressed.connect(_start)
     var ch:=_btn(ui,"♙  PERSONAGENS / SKINS",Vector2(get_viewport().size.x/2-170,430),Vector2(340,56)); ch.pressed.connect(_characters)
     var inv:=_btn(ui,"▣  INVENTÁRIO",Vector2(get_viewport().size.x/2-170,497),Vector2(340,56),Color(0.14,0.25,0.36)); inv.pressed.connect(_inventory)
     var st:=_btn(ui,"⚙  CONFIGURAÇÕES",Vector2(get_viewport().size.x/2-170,564),Vector2(340,56),Color(0.18,0.21,0.25)); st.pressed.connect(_settings)
-    var foot:=_txt(ui,"KOSMOS • LUCAS • CUÍCA • DANILO • MARLI     |     🪙 %d"%coins,Vector2(0,get_viewport().size.y-34),Vector2(get_viewport().size.x,25),13); foot.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+    var foot:=_txt(ui,"PUNK V1     |     🪙 %d"%coins,Vector2(0,get_viewport().size.y-34),Vector2(get_viewport().size.x,25),13); foot.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 
 func _characters() -> void:
     mode="characters"; _reset_ui(); _bg(Color(0.012,0.022,0.036))
@@ -190,7 +190,7 @@ func _inventory() -> void:
     mode = "inventory"
     _reset_ui()
     _bg(Color(0.012, 0.02, 0.03))
-    _txt(ui, "ARSENAL • SKINS DE ARMAS", Vector2(25, 18), Vector2(700, 45), 29)
+    _txt(ui, "PUNK • ARSENAL E SKINS", Vector2(25, 18), Vector2(700, 45), 29)
     _txt(ui, "Moedas: %d" % coins, Vector2(28, 62), Vector2(350, 30), 19)
     _txt(ui, "ESCOLHA SUA ARMA", Vector2(28, 101), Vector2(400, 30), 18)
 
@@ -250,7 +250,7 @@ func _weapon_skin_action(sn: String) -> void:
 
 
 func _settings() -> void:
-    mode="settings"; _reset_ui(); _bg(Color(0.012,0.018,0.028)); _txt(ui,"CONFIGURAÇÕES",Vector2(28,25),Vector2(600,50),34); _txt(ui,"REAL CHP BATTLE v0.3",Vector2(30,82),Vector2(500,30),18)
+    mode="settings"; _reset_ui(); _bg(Color(0.012,0.018,0.028)); _txt(ui,"CONFIGURAÇÕES",Vector2(28,25),Vector2(600,50),34); _txt(ui,"PUNK v1 • PROTÓTIPO 3D",Vector2(30,82),Vector2(500,30),18)
     _txt(ui,"Câmera: terceira pessoa\nControles: joystick + arraste para mirar\nGráficos: compatibilidade mobile\nMapa: área aberta com casas, cobertura, árvores e loot",Vector2(30,140),Vector2(700,150),18)
     var back:=_btn(ui,"← VOLTAR",Vector2(30,get_viewport().size.y-72),Vector2(150,50),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
 
@@ -295,12 +295,68 @@ func _tree(parent:Node,pos:Vector3)->void:
 func _crate(parent:Node,pos:Vector3,side:float)->void:
     var b:=StaticBody3D.new(); b.position=pos+Vector3(0,side/2,0); parent.add_child(b); _box(b,Vector3(side,side,side),Vector3.ZERO,_mat(Color(0.42,0.25,0.12))); var c:=CollisionShape3D.new(); var s:=BoxShape3D.new(); s.size=Vector3(side,side,side); c.shape=s; b.add_child(c)
 
+
+func _build_player_armor(parent:Node3D)->void:
+    var base:Color=chars[selected]["color"]
+    var dark:=base.darkened(0.48)
+    var accent:=Color(0.95,0.48,0.10)
+    if skin=="Dragão de Fogo":
+        accent=Color(1.0,0.12,0.025)
+    elif skin=="Gelo Eterno":
+        accent=Color(0.25,0.86,1.0)
+    elif skin=="Ouro Imperial":
+        accent=Color(1.0,0.72,0.12)
+    elif skin=="Neon Roxo":
+        accent=Color(0.78,0.18,1.0)
+
+    _box(parent,Vector3(0.72,0.72,0.38),Vector3(0,0.12,0),_mat(base,0.62,0.12))
+    _box(parent,Vector3(0.78,0.16,0.42),Vector3(0,0.40,0),_mat(dark,0.5,0.18))
+    _box(parent,Vector3(0.52,0.12,0.43),Vector3(0,0.05,-0.015),_mat(accent,0.35,0.35))
+    for side in [-1.0,1.0]:
+        _box(parent,Vector3(0.30,0.30,0.34),Vector3(side*0.48,0.38,0),_mat(dark,0.55,0.15))
+        _box(parent,Vector3(0.22,0.48,0.24),Vector3(side*0.48,-0.03,0),_mat(base,0.7,0.05))
+        _box(parent,Vector3(0.20,0.18,0.25),Vector3(side*0.48,-0.35,0),_mat(accent,0.4,0.3))
+        _box(parent,Vector3(0.27,0.48,0.30),Vector3(side*0.19,-0.62,0.015),_mat(dark,0.65,0.05))
+        _box(parent,Vector3(0.29,0.18,0.38),Vector3(side*0.19,-0.92,-0.035),_mat(Color(0.08,0.09,0.11),0.45,0.25))
+
+    var head:=MeshInstance3D.new()
+    var hm:=SphereMesh.new()
+    hm.radius=0.23
+    hm.height=0.44
+    hm.material=_mat(Color(0.55,0.36,0.25))
+    head.mesh=hm
+    head.position=Vector3(0,0.72,0)
+    parent.add_child(head)
+    _box(parent,Vector3(0.44,0.14,0.40),Vector3(0,0.88,0),_mat(dark,0.4,0.25))
+    _box(parent,Vector3(0.48,0.07,0.43),Vector3(0,0.81,-0.015),_mat(accent,0.3,0.4))
+
+func _build_weapon_model(parent:Node3D)->void:
+    var weapon:=Node3D.new()
+    weapon.name="WeaponModel"
+    weapon.position=Vector3(0.43,0.26,-0.48)
+    parent.add_child(weapon)
+    var metal:=Color(0.055,0.065,0.075)
+    var accent:=Color(0.95,0.48,0.10)
+    if skin=="Dragão de Fogo":
+        accent=Color(1.0,0.12,0.025)
+    elif skin=="Gelo Eterno":
+        accent=Color(0.25,0.86,1.0)
+    elif skin=="Ouro Imperial":
+        accent=Color(1.0,0.72,0.12)
+        metal=Color(0.22,0.16,0.055)
+    elif skin=="Neon Roxo":
+        accent=Color(0.78,0.18,1.0)
+    _box(weapon,Vector3(0.13,0.13,0.78),Vector3(0,0,-0.10),_mat(metal,0.28,0.65))
+    _box(weapon,Vector3(0.16,0.18,0.36),Vector3(0,0.015,0.12),_mat(accent,0.3,0.45))
+    _box(weapon,Vector3(0.10,0.28,0.16),Vector3(0,-0.19,0.10),_mat(metal,0.4,0.5))
+    _box(weapon,Vector3(0.07,0.07,0.48),Vector3(0,0.02,-0.62),_mat(metal,0.25,0.8))
+    _box(weapon,Vector3(0.18,0.06,0.18),Vector3(0,0.11,-0.28),_mat(accent,0.25,0.35))
+
 func _player() -> void:
     player=CharacterBody3D.new(); player.name="Player"; player.position=Vector3(0,1,16); add_child(player)
     var c:=CollisionShape3D.new(); var s:=CapsuleShape3D.new(); s.height=1.8; s.radius=0.34; c.shape=s; player.add_child(c)
-    var body:=MeshInstance3D.new(); var bm:=CapsuleMesh.new(); bm.height=1.4; bm.radius=0.38; bm.material=_mat(chars[selected]["color"]); body.mesh=bm; body.position.y=0.05; player.add_child(body)
-    var head:=MeshInstance3D.new(); var hm:=SphereMesh.new(); hm.radius=0.24; hm.height=0.46; hm.material=_mat(Color(0.68,0.48,0.34)); head.mesh=hm; head.position.y=0.94; player.add_child(head)
-    _box(player,Vector3(0.16,0.16,1.0),Vector3(0.42,0.28,-0.40),_mat(Color(0.06,0.07,0.08),0.3,0.5))
+    _build_player_armor(player)
+    _build_weapon_model(player)
     camera=Camera3D.new(); camera.position=Vector3(0,2.35,5.8); camera.rotation.x=pitch; camera.fov=72; camera.current=true; player.add_child(camera)
     hp=chars[selected]["hp"]; shield=0; energy=MAX_ENERGY; ammo=MAG; kills=0; time_left=START_TIME; zone=MAP; zone_tick=0; ability_cd=0; ability_tick=0; medkits=3; match_done=false
 
