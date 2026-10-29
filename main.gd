@@ -12,6 +12,11 @@ const START_TIME := 420.0
 var mode := "lobby"
 var selected := "Kosmos"
 var skin := "Original"
+var wardrobe_category := "Conjuntos"
+var wardrobe_equipped := {"Conjuntos":"Conjunto Dragão Neon","Cabeças":"Cabelo Espinhos","Máscaras":"Máscara Tática","Peitorais":"Jaqueta Eclipse","Calças":"Calça Angelical Cósmica","Sapatos":"Tênis Azul Elétrico","Emotes":"Dança da Vitória"}
+var wardrobe_categories := ["Conjuntos","Cabeças","Máscaras","Peitorais","Calças","Sapatos","Emotes"]
+var royale_tab := "Destaques"
+var royale_items := ["Guardião Carmesim","Anjo Cósmico","Lenda Neon","Dragão Abissal","UMP Tempestade","XM8 Prisma","Emote Vitória Suprema"]
 
 # Arsenal REAL CHP BATTLE
 var active_weapon := "UMP"
@@ -171,8 +176,86 @@ func _lobby() -> void:
     var play:=_btn(ui,"▶  JOGAR",Vector2(get_viewport().size.x/2-170,355),Vector2(340,64),Color(0.08,0.50,0.37)); play.pressed.connect(_start)
     var ch:=_btn(ui,"♙  PERSONAGENS / SKINS",Vector2(get_viewport().size.x/2-170,430),Vector2(340,56)); ch.pressed.connect(_characters)
     var inv:=_btn(ui,"▣  INVENTÁRIO",Vector2(get_viewport().size.x/2-170,497),Vector2(340,56),Color(0.14,0.25,0.36)); inv.pressed.connect(_inventory)
-    var st:=_btn(ui,"⚙  CONFIGURAÇÕES",Vector2(get_viewport().size.x/2-170,564),Vector2(340,56),Color(0.18,0.21,0.25)); st.pressed.connect(_settings)
+    var vault:=_btn(ui,"▣  COFRE DE ROUPAS",Vector2(get_viewport().size.x/2-170,564),Vector2(340,52),Color(0.24,0.16,0.38)); vault.pressed.connect(_wardrobe)
+    var arsenal:=_btn(ui,"⚔  ARSENAL",Vector2(get_viewport().size.x/2-170,623),Vector2(160,48),Color(0.12,0.28,0.42)); arsenal.pressed.connect(_inventory)
+    var royale:=_btn(ui,"✦  ROYALE",Vector2(get_viewport().size.x/2+10,623),Vector2(160,48),Color(0.48,0.22,0.08)); royale.pressed.connect(_royale)
+    var st:=_btn(ui,"⚙  CONFIGURAÇÕES",Vector2(get_viewport().size.x/2-170,678),Vector2(340,48),Color(0.18,0.21,0.25)); st.pressed.connect(_settings)
     var foot:=_txt(ui,"PUNK V1     |     🪙 %d"%coins,Vector2(0,get_viewport().size.y-34),Vector2(get_viewport().size.x,25),13); foot.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+
+func _wardrobe() -> void:
+    mode = "wardrobe"
+    _reset_ui()
+    _bg(Color(0.018,0.012,0.035))
+    _txt(ui,"COFRE  /  MODA",Vector2(24,18),Vector2(500,42),30).add_theme_color_override("font_color",Color(1.0,0.78,0.22))
+    _txt(ui,"PERSONAGEM: "+selected+"  •  VISUAIS EQUIPADOS",Vector2(26,60),Vector2(700,28),15)
+    var width := get_viewport().size.x
+    for i in range(wardrobe_categories.size()):
+        var cat:String = wardrobe_categories[i]
+        var col := i % 2
+        var row := int(i / 2)
+        var b := _btn(ui,cat,Vector2(20+col*(width/2),105+row*53),Vector2(width/2-28,45),Color(0.38,0.24,0.07) if wardrobe_category==cat else Color(0.10,0.16,0.23))
+        b.pressed.connect(_wardrobe_category.bind(cat))
+    _txt(ui,"ITENS • "+wardrobe_category.to_upper()+"  (1000 MODELOS)",Vector2(24,300),Vector2(650,30),18)
+    var names:Array[String] = _wardrobe_items(wardrobe_category)
+    for i in range(mini(names.size(),8)):
+        var item:String = names[i]
+        var b := _btn(ui,item+("  ✓" if wardrobe_equipped.get(wardrobe_category,"")==item else ""),Vector2(24,340+i*42),Vector2(width-48,36),Color(0.10,0.35,0.30) if wardrobe_equipped.get(wardrobe_category,"")==item else Color(0.12,0.16,0.23))
+        b.pressed.connect(_equip_wardrobe.bind(item))
+    var back := _btn(ui,"← LOBBY",Vector2(24,get_viewport().size.y-58),Vector2(140,42),Color(0.18,0.20,0.24))
+    back.pressed.connect(_lobby)
+
+func _wardrobe_items(category:String) -> Array[String]:
+    var prefix := category.trim_suffix("s")
+    var themes := ["Angelical Cósmico","Dragão Neon","Eclipse Sombrio","Guardião Celeste","Tempestade Rubra","Lenda Glacial","Samurai Dourado","Abismo Violeta"]
+    var result:Array[String] = []
+    for i in range(1000):
+        result.append(prefix+" "+themes[i % themes.size()]+" • "+str(i+1))
+    return result
+
+func _wardrobe_category(category:String) -> void:
+    wardrobe_category = category
+    _wardrobe()
+
+func _equip_wardrobe(item:String) -> void:
+    wardrobe_equipped[wardrobe_category] = item
+    _toast("EQUIPADO: "+item)
+    _wardrobe()
+
+func _royale() -> void:
+    mode = "royale"
+    _reset_ui()
+    _bg(Color(0.025,0.008,0.025))
+    _txt(ui,"ROYALE  •  GIRO PREMIADO",Vector2(24,18),Vector2(700,42),30).add_theme_color_override("font_color",Color(1.0,0.70,0.22))
+    _txt(ui,"RECOMPENSAS VISUAIS ORIGINAIS",Vector2(26,60),Vector2(700,25),14)
+    var tabs := ["Destaques","Roupas","Emotes","Armas"]
+    for i in range(tabs.size()):
+        var b := _btn(ui,tabs[i],Vector2(18+i*(get_viewport().size.x-36)/4,100),Vector2((get_viewport().size.x-48)/4,43),Color(0.48,0.20,0.08) if royale_tab==tabs[i] else Color(0.13,0.12,0.20))
+        b.pressed.connect(_royale_select_tab.bind(tabs[i]))
+    for i in range(6):
+        var item:String = royale_items[(i+tabs.find(royale_tab)*2)%royale_items.size()]
+        var x := 22+(i%2)*(get_viewport().size.x/2)
+        var y := 170+int(i/2)*125
+        var card:=Panel.new()
+        card.position=Vector2(x,y); card.size=Vector2(get_viewport().size.x/2-34,108)
+        card.add_theme_stylebox_override("panel",_style(Color(0.12,0.045,0.12),Color(0.85,0.48,0.16),12)); ui.add_child(card)
+        _txt(card,"✦  "+item,Vector2(10,12),Vector2(card.size.x-20,45),15)
+        var buy:=_btn(card,"RESGATAR • 100 MOEDAS",Vector2(10,65),Vector2(card.size.x-20,34),Color(0.52,0.25,0.07))
+        buy.pressed.connect(_royale_claim.bind(item))
+    var back:=_btn(ui,"← LOBBY",Vector2(24,get_viewport().size.y-58),Vector2(140,42),Color(0.18,0.20,0.24))
+    back.pressed.connect(_lobby)
+
+func _royale_select_tab(tab:String) -> void:
+    royale_tab=tab
+    _royale()
+
+func _royale_claim(item:String) -> void:
+    if coins < 100:
+        _toast("MOEDAS INSUFICIENTES")
+        return
+    coins -= 100
+    wardrobe_equipped["Conjuntos" if royale_tab=="Roupas" else ("Emotes" if royale_tab=="Emotes" else "Conjuntos")] = item
+    _toast("RECOMPENSA DESBLOQUEADA: "+item)
+    _royale()
 
 func _characters() -> void:
     mode="characters"; _reset_ui(); _bg(Color(0.012,0.022,0.036))
