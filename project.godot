@@ -1,5 +1,5 @@
 [application]
-config/name="PUNK v1"
+config/name="PUNK"
 run/main_scene="res://main.tscn"
 config/icon="res://assets/real_chapero.png"
 boot_splash/image="res://assets/real_chapero.png"

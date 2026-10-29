@@ -1,4 +1,4 @@
-name: Build REAL CHP BATTLE APK
+name: Build PUNK APK
 
 on:
   workflow_dispatch:
@@ -61,11 +61,11 @@ jobs:
       - name: Export APK
         run: |
           mkdir -p build
-          "$GODOT_BIN" --headless --path . --export-debug Android build/REAL_CHP_BATTLE.apk
+          "$GODOT_BIN" --headless --path . --export-debug Android build/PUNK.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: REAL-CHP-BATTLE-APK
-          path: build/REAL_CHP_BATTLE.apk
+          name: PUNK-APK
+          path: build/PUNK.apk
           if-no-files-found: error
