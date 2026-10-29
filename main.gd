@@ -118,10 +118,18 @@ func _world_lighting() -> void:
     add_child(sun)
 
 func _reset_ui() -> void:
-    if ui: ui.queue_free()
+    if ui and is_instance_valid(ui):
+        var old_layer := ui.get_parent()
+        if old_layer and is_instance_valid(old_layer):
+            old_layer.queue_free()
+    var layer := CanvasLayer.new()
+    layer.name = "GameUI"
+    layer.layer = 10
+    add_child(layer)
     ui = Control.new()
     ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    add_child(ui)
+    ui.mouse_filter = Control.MOUSE_FILTER_STOP
+    layer.add_child(ui)
 
 func _bg(color:Color) -> ColorRect:
     var c := ColorRect.new()
