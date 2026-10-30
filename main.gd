@@ -20,6 +20,8 @@ var royale_items := ["Guardião Carmesim","Anjo Cósmico","Lenda Neon","Dragão 
 
 # Arsenal REAL CHP BATTLE
 var active_weapon := "UMP"
+var weapon_damage := {"UMP":28.0,"XM8":30.0,"Águia do Deserto":48.0,"M1014":22.0,"MP40":19.0}
+var weapon_cadence := {"UMP":0.13,"XM8":0.15,"Águia do Deserto":0.38,"M1014":0.48,"MP40":0.075}
 var weapon_catalog := ["UMP", "XM8", "Águia do Deserto", "M1014", "MP40"]
 var weapon_skin_catalog := ["Original", "Dragão de Fogo", "Gelo Eterno", "Ouro Imperial", "Neon Roxo"]
 var weapon_skin_owned := {
@@ -650,7 +652,7 @@ func _look(r:Vector2) -> void:
 func _shoot() -> void:
     if shot_tick>0 or reload_tick>0 or match_done: return
     if ammo<=0: _reload(); return
-    shot_tick=0.13; ammo-=1
+    shot_tick=float(weapon_cadence.get(active_weapon,0.13)); ammo-=1
     var a:=camera.global_position
     var z:=a+(-camera.global_transform.basis.z)*110
     var q:=PhysicsRayQueryParameters3D.create(a,z)
@@ -659,7 +661,7 @@ func _shoot() -> void:
     if hit:
         var obj=hit.get("collider")
         if obj and obj in bots:
-            var id:=obj.get_instance_id(); var dmg:=28.0
+            var id:=obj.get_instance_id(); var dmg:=float(weapon_damage.get(active_weapon,28.0))
             if selected=="Kosmos" and ability_tick>0: dmg=39
             if selected=="Cuíca" and ability_tick>0: dmg=34+kills*2
             bot_hp[id]=float(bot_hp.get(id,100))-dmg
@@ -670,7 +672,7 @@ func _switch_weapon() -> void:
     var index=weapon_catalog.find(active_weapon)
     active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
     var old_model=player.get_node_or_null("WeaponModel")
-    if old_model: old_model.queue_free()
+    if old_model: old_model.free()
     _build_weapon_model(player)
     ammo=MAG
     reload_tick=0.0
