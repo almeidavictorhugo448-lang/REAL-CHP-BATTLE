@@ -101,25 +101,20 @@ func _ready() -> void:
 func _world_lighting() -> void:
     var e := WorldEnvironment.new()
     var env := Environment.new()
-    env.background_mode = Environment.BG_SKY
-    var sky := Sky.new()
-    var sm := ProceduralSkyMaterial.new()
-    sm.sky_top_color = Color(0.015,0.045,0.11)
-    sm.sky_horizon_color = Color(0.50,0.70,0.78)
-    sm.ground_horizon_color = Color(0.35,0.45,0.30)
-    sm.ground_bottom_color = Color(0.06,0.10,0.06)
-    sky.sky_material = sm
-    env.sky = sky
-    env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-    env.ambient_light_energy = 0.85
-    env.fog_enabled = true
-    env.fog_density = 0.003
+    # Fundo de cor sólida: fallback mais previsível em aparelhos Android com GPU limitada.
+    env.background_mode = Environment.BG_COLOR
+    env.background_color = Color(0.035, 0.065, 0.085)
+    env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+    env.ambient_light_color = Color(0.62, 0.70, 0.76)
+    env.ambient_light_energy = 0.9
+    env.fog_enabled = false
     e.environment = env
     add_child(e)
     var sun := DirectionalLight3D.new()
     sun.rotation_degrees = Vector3(-50,-28,0)
     sun.light_energy = 1.4
-    sun.shadow_enabled = true
+    # Sombras dinâmicas podem causar tela cinza/preta em alguns drivers mobile.
+    sun.shadow_enabled = false
     add_child(sun)
 
 func _reset_ui() -> void:
