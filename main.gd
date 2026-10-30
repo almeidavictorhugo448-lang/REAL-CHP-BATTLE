@@ -89,6 +89,10 @@ var fire_held := false
 var aim_held := false
 var current_scope := "Geral"
 var sensitivities := {"Geral":100.0,"Ponto vermelho":95.0,"2x":90.0,"4x":80.0,"AWM":50.0,"Olhadinha":100.0}
+var graphics_quality := "Padrão"
+var fps_mode := "Alto"
+var graphics_environment: Environment
+var graphics_sun: DirectionalLight3D
 
 var ui: Control
 var battle_ui: Control
@@ -159,6 +163,12 @@ func _load_settings() -> void:
         return
     for name in sensitivities.keys():
         sensitivities[name] = clampf(float(config.get_value("sensitivities", name, sensitivities[name])), 0.0, 200.0)
+    graphics_quality = String(config.get_value("graphics", "quality", graphics_quality))
+    fps_mode = String(config.get_value("graphics", "fps", fps_mode))
+    if not graphics_quality in ["Suave", "Padrão", "Ultra"]:
+        graphics_quality = "Padrão"
+    if not fps_mode in ["Normal", "Alto", "Ultra"]:
+        fps_mode = "Alto"
 
 func _load_profile() -> void:
     var config := ConfigFile.new()
@@ -217,6 +227,8 @@ func _save_settings() -> void:
     var config := ConfigFile.new()
     for name in sensitivities.keys():
         config.set_value("sensitivities", name, sensitivities[name])
+    config.set_value("graphics", "quality", graphics_quality)
+    config.set_value("graphics", "fps", fps_mode)
     var error := config.save("user://punk_settings.cfg")
     if error != OK:
         push_warning("Não foi possível salvar as configurações: %s" % error)
@@ -243,14 +255,19 @@ func _world_lighting() -> void:
     env.ambient_light_color = Color(0.62, 0.70, 0.76)
     env.ambient_light_energy = 0.9
     env.fog_enabled = false
+    e.name = "WorldEnvironment"
     e.environment = env
+    graphics_environment = env
     add_child(e)
     var sun := DirectionalLight3D.new()
+    sun.name = "Sun"
     sun.rotation_degrees = Vector3(-50,-28,0)
     sun.light_energy = 1.4
     # Sombras dinâmicas podem causar tela cinza/preta em alguns drivers mobile.
     sun.shadow_enabled = false
+    graphics_sun = sun
     add_child(sun)
+    _apply_graphics_settings()
 
 func _reset_ui() -> void:
     # A interface de batalha é recriada ao trocar de tela; descarte referências antigas.
@@ -671,8 +688,57 @@ func _settings() -> void:
         slider.position=Vector2(24,y+27); slider.size=Vector2(width-48,28)
         slider.value_changed.connect(_set_sensitivity.bind(name,label))
         ui.add_child(slider)
-    _txt(ui,"MIRA GRUDADA: assistência ao mirar nos rivais próximos",Vector2(26,510),Vector2(width-52,34),14)
+    _txt(ui,"MIRA GRUDADA: assistência ao mirar nos rivais próximos",Vector2(26,510),Vector2(width-52,28),13)
+    _txt(ui,"GRÁFICOS",Vector2(26,542),Vector2(170,26),16).add_theme_color_override("font_color",Color(1.0,0.78,0.30))
+    var quality_label := _txt(ui,"QUALIDADE",Vector2(26,572),Vector2(130,28),14)
+    var quality_option := OptionButton.new()
+    quality_option.position = Vector2(150,568)
+    quality_option.size = Vector2(180,38)
+    for option in ["Suave","Padrão","Ultra"]:
+        quality_option.add_item(option)
+    quality_option.select(["Suave","Padrão","Ultra"].find(graphics_quality))
+    quality_option.item_selected.connect(_set_graphics_quality)
+    ui.add_child(quality_option)
+    _txt(ui,"FPS",Vector2(width*0.56,572),Vector2(60,28),14)
+    var fps_option := OptionButton.new()
+    fps_option.position = Vector2(width*0.56+58,568)
+    fps_option.size = Vector2(150,38)
+    for option in ["Normal","Alto","Ultra"]:
+        fps_option.add_item(option)
+    fps_option.select(["Normal","Alto","Ultra"].find(fps_mode))
+    fps_option.item_selected.connect(_set_fps_mode)
+    ui.add_child(fps_option)
+    _txt(ui,"Suave prioriza desempenho • Ultra prioriza efeitos visuais",Vector2(26,612),Vector2(width-52,24),12).add_theme_color_override("font_color",Color(0.70,0.76,0.80))
     var back:=_btn(ui,"← VOLTAR",Vector2(24,get_viewport().size.y-62),Vector2(150,46),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
+
+func _set_graphics_quality(index:int) -> void:
+    graphics_quality = ["Suave","Padrão","Ultra"][clampi(index,0,2)]
+    _apply_graphics_settings()
+    _save_settings()
+    _toast("GRÁFICOS: "+graphics_quality.to_upper())
+
+func _set_fps_mode(index:int) -> void:
+    fps_mode = ["Normal","Alto","Ultra"][clampi(index,0,2)]
+    _apply_graphics_settings()
+    _save_settings()
+    _toast("LIMITE DE FPS: "+fps_mode.to_upper())
+
+func _apply_graphics_settings() -> void:
+    var low := graphics_quality == "Suave"
+    var ultra := graphics_quality == "Ultra"
+    Engine.max_fps = 30 if fps_mode == "Normal" else (120 if fps_mode == "Ultra" else 60)
+    var viewport := get_viewport()
+    if viewport:
+        viewport.scaling_3d_scale = 0.72 if low else (1.0 if ultra else 0.88)
+    if graphics_environment:
+        graphics_environment.ambient_light_energy = 0.78 if low else (1.05 if ultra else 0.9)
+        graphics_environment.fog_enabled = ultra
+        graphics_environment.fog_light_color = Color(0.48,0.60,0.65)
+        graphics_environment.fog_density = 0.0018 if ultra else 0.0
+        graphics_environment.glow_enabled = ultra
+    if graphics_sun:
+        graphics_sun.shadow_enabled = ultra
+        graphics_sun.light_energy = 1.15 if low else (1.55 if ultra else 1.4)
 
 func _set_sensitivity(value:float,name:String,label:Label) -> void:
     sensitivities[name]=clampf(value,0.0,200.0)
@@ -850,7 +916,8 @@ func _build_map() -> void:
             _house(map,center+offset,Vector3(7.0,3.8,6.5),Color(0.56,0.57,0.49),Color(0.24,0.20,0.16))
 
     # Vegetação e cobertura em áreas rurais, sem bloquear os centros das cidades.
-    for i in range(360):
+    var foliage_count:int = 110 if graphics_quality == "Suave" else (360 if graphics_quality == "Ultra" else 220)
+    for i in range(foliage_count):
         var pos:=Vector3(randf_range(-202,202),0,randf_range(-202,202))
         var near_road:bool = abs(pos.x)<10.0 or abs(pos.z)<10.0
         var near_town:bool = false
