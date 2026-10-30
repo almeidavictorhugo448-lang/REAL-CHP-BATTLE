@@ -107,7 +107,8 @@ var ability: Button
 var medkit: Button
 var switch_weapon: Button
 var gloo_button: Button
-var gloo_charges := 3
+var gloo_charges := 12
+var active_gloo_walls: Array[StaticBody3D] = []
 
 var chars := {
     "Kosmos": {"color":Color(0.12,0.32,0.95),"hp":250.0,"ability":"Dragão: 250 HP + 90 escudo / 30s","cd":120.0},
@@ -535,7 +536,8 @@ func _start() -> void:
     match_phase="lobby_aircraft"
     boarding_time=20.0
     kills=0
-    gloo_charges=3
+    gloo_charges=12
+    active_gloo_walls.clear()
     hp=_max_player_hp()
     shield=0
     energy=MAX_ENERGY
@@ -831,7 +833,7 @@ func _battle_ui() -> void:
     var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; hit_marker=_txt(battle_ui,"",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); hit_marker.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; hit_marker.add_theme_color_override("font_color",Color(1.0,0.28,0.20)); hit_marker.visible=false
     joy_base=Panel.new(); joy_base.size=Vector2(132,132); joy_base.add_theme_stylebox_override("panel",_style(Color(0.04,0.09,0.12,0.45),Color(0.5,0.85,0.8,0.65),70)); joy_base.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_base)
     joy_knob=Panel.new(); joy_knob.size=Vector2(58,58); joy_knob.add_theme_stylebox_override("panel",_style(Color(0.25,0.85,0.80,0.75),Color.WHITE,40)); joy_knob.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_knob)
-    fire=_btn(battle_ui,"ATIRAR",Vector2.ZERO,Vector2(112,112),Color(0.72,0.10,0.10)); switch_weapon=_btn(battle_ui,"TROCAR",Vector2.ZERO,Vector2(104,46),Color(0.24,0.30,0.42)); reload=_btn(battle_ui,"RECARREGAR",Vector2.ZERO,Vector2(145,50),Color(0.16,0.28,0.36)); ability=_btn(battle_ui,"DRAGÃO",Vector2.ZERO,Vector2(155,58),Color(0.10,0.46,0.38)); medkit=_btn(battle_ui,"KIT +50",Vector2.ZERO,Vector2(105,48),Color(0.14,0.38,0.24)); aim=_btn(battle_ui,"MIRA",Vector2.ZERO,Vector2(82,48),Color(0.20,0.28,0.40)); gloo_button=_btn(battle_ui,"GELO 3",Vector2.ZERO,Vector2(105,48),Color(0.08,0.42,0.58))
+    fire=_btn(battle_ui,"ATIRAR",Vector2.ZERO,Vector2(112,112),Color(0.72,0.10,0.10)); switch_weapon=_btn(battle_ui,"TROCAR",Vector2.ZERO,Vector2(104,46),Color(0.24,0.30,0.42)); reload=_btn(battle_ui,"RECARREGAR",Vector2.ZERO,Vector2(145,50),Color(0.16,0.28,0.36)); ability=_btn(battle_ui,"DRAGÃO",Vector2.ZERO,Vector2(155,58),Color(0.10,0.46,0.38)); medkit=_btn(battle_ui,"KIT +50",Vector2.ZERO,Vector2(105,48),Color(0.14,0.38,0.24)); aim=_btn(battle_ui,"MIRA",Vector2.ZERO,Vector2(82,48),Color(0.20,0.28,0.40)); gloo_button=_btn(battle_ui,"GELO 12",Vector2.ZERO,Vector2(105,48),Color(0.08,0.42,0.58))
     switch_weapon.pressed.connect(_switch_weapon)
     fire.button_down.connect(func(): fire_held=true; _shoot())
     fire.button_up.connect(func(): fire_held=false)
@@ -864,6 +866,10 @@ func _deploy_gloo_wall() -> void:
     if not is_instance_valid(player):
         return
     gloo_charges -= 1
+    if active_gloo_walls.size() >= 3:
+        var oldest: StaticBody3D = active_gloo_walls.pop_front()
+        if is_instance_valid(oldest):
+            oldest.queue_free()
     var forward := -player.global_transform.basis.z
     var wall := StaticBody3D.new()
     wall.name = "PUNK_Gelo_" + str(Time.get_ticks_msec())
@@ -881,6 +887,7 @@ func _deploy_gloo_wall() -> void:
     shape.size = slab.size
     collision.shape = shape
     wall.add_child(collision)
+    active_gloo_walls.append(wall)
     gloo_button.text = "GELO %d" % gloo_charges
     gloo_button.disabled = gloo_charges <= 0
     _toast("PAREDE DE GELO ATIVADA • 20s")
@@ -890,6 +897,7 @@ func _expire_gloo_wall(wall:StaticBody3D) -> void:
     await get_tree().create_timer(20.0).timeout
     if is_instance_valid(wall):
         wall.queue_free()
+    active_gloo_walls.erase(wall)
 
 func _abandon_match() -> void:
     if mode=="battle" and not match_done:
