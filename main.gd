@@ -577,7 +577,13 @@ func _move(delta:float) -> void:
         var stick=(joy_pos-joy_start).limit_length(58)/58
         if stick.length()<0.13: stick=Vector2.ZERO
         input=stick
-    var f:Vector3=-player.global_transform.basis.z; var r:Vector3=player.global_transform.basis.x; var d:=r*input.x+f*(-input.y); if d.length()>1: d=d.normalized()
+    # Mantém a velocidade diagonal igual à velocidade em linha reta.
+    input=input.limit_length(1.0)
+    var f:Vector3=-player.global_transform.basis.z
+    var r:Vector3=player.global_transform.basis.x
+    var d:=r*input.x+f*(-input.y)
+    d.y=0
+    if d.length()>1.0: d=d.normalized()
     var sp:=6.3; if selected=="Danilo" and ability_tick>0: sp=9.2
     player.velocity.x=d.x*sp; player.velocity.z=d.z*sp
     if not player.is_on_floor(): player.velocity.y-=20*delta
