@@ -473,169 +473,169 @@ func _build_lobby_showcase() -> void:
     stage.name = "LobbyShowcase"
     add_child(stage)
 
-    var ground := _mat(Color(0.035,0.045,0.055),0.98)
-    var stone := _mat(Color(0.105,0.105,0.13),0.92)
-    var wall := _mat(Color(0.16,0.13,0.17),0.88)
-    var roof := _mat(Color(0.045,0.035,0.065),0.72)
-    var metal := _mat(Color(0.035,0.045,0.065),0.42,0.72)
-    var trim := _mat(Color(0.42,0.13,0.10),0.62)
-    var floor := MeshInstance3D.new()
-    var floor_mesh := PlaneMesh.new()
-    floor_mesh.size = Vector2(100,100)
-    floor_mesh.material = ground
-    floor.mesh = floor_mesh
-    floor.position = Vector3(0,-0.32,0)
-    stage.add_child(floor)
+    # Arena costeira futurista: sem a mansão/decoração de Halloween do protótipo.
+    var ocean_mat := _mat(Color("#071D32"),0.28,0.22)
+    var island_mat := _mat(Color("#182C38"),0.92,0.0)
+    var dark_metal := _mat(Color("#101B2A"),0.34,0.72)
+    var panel_mat := _mat(Color("#20394A"),0.38,0.55)
+    var gold_mat := _mat(Color("#F6C34A"),0.30,0.48)
+    var cyan_mat := StandardMaterial3D.new()
+    cyan_mat.albedo_color = Color("#42D7E8")
+    cyan_mat.emission_enabled = true
+    cyan_mat.emission = Color("#159CB7")
+    cyan_mat.emission_energy_multiplier = 1.15
 
-    # Pátio de pedra e escadaria de entrada.
-    _box(stage,Vector3(44,0.16,28),Vector3(0,-0.20,-5),stone)
-    _box(stage,Vector3(7,0.035,24),Vector3(0,-0.105,4),_mat(Color(0.17,0.15,0.18),0.72))
-    for i in range(4):
-        _box(stage,Vector3(11.0-float(i),0.22,0.62),Vector3(0,-0.05+float(i)*0.17,-2.2-float(i)*0.58),stone)
+    var ocean := MeshInstance3D.new()
+    var ocean_mesh := PlaneMesh.new()
+    ocean_mesh.size = Vector2(180,180)
+    ocean_mesh.material = ocean_mat
+    ocean.mesh = ocean_mesh
+    ocean.position = Vector3(0,-1.35,-24)
+    stage.add_child(ocean)
 
-    # Fachada gótica, alas laterais e telhados inclinados.
-    _box(stage,Vector3(23,8,1),Vector3(0,3.75,-13),wall)
-    _box(stage,Vector3(26,0.48,12),Vector3(0,7.82,-18),roof)
-    var roof_l := _box(stage,Vector3(13.5,0.42,12.8),Vector3(-6.2,9.05,-17.6),roof)
-    roof_l.rotation.z = -0.48
-    var roof_r := _box(stage,Vector3(13.5,0.42,12.8),Vector3(6.2,9.05,-17.6),roof)
-    roof_r.rotation.z = 0.48
-    _box(stage,Vector3(1.1,9,1.2),Vector3(-10.8,4.3,-12.5),metal)
-    _box(stage,Vector3(1.1,9,1.2),Vector3(10.8,4.3,-12.5),metal)
-    _box(stage,Vector3(7,7,1.4),Vector3(0,4.2,-11.9),_mat(Color(0.09,0.07,0.11),0.82))
-    _box(stage,Vector3(4.4,4.8,0.22),Vector3(0,3.05,-11.05),metal)
-    _box(stage,Vector3(4.8,0.22,0.25),Vector3(0,5.55,-10.98),trim)
+    var island := MeshInstance3D.new()
+    var island_mesh := CylinderMesh.new()
+    island_mesh.top_radius = 25.0
+    island_mesh.bottom_radius = 29.0
+    island_mesh.height = 2.4
+    island_mesh.radial_segments = 64
+    island_mesh.material = island_mat
+    island.mesh = island_mesh
+    island.position = Vector3(0,-0.35,-12)
+    stage.add_child(island)
 
-    var window_mat := StandardMaterial3D.new()
-    window_mat.albedo_color = Color(0.9,0.32,0.09)
-    window_mat.emission_enabled = true
-    window_mat.emission = Color(1.0,0.16,0.025)
-    window_mat.emission_energy_multiplier = 1.8
+    # Plataforma central circular com anéis luminosos.
+    var base := MeshInstance3D.new()
+    var base_mesh := CylinderMesh.new()
+    base_mesh.top_radius = 5.4
+    base_mesh.bottom_radius = 5.8
+    base_mesh.height = 0.42
+    base_mesh.radial_segments = 64
+    base_mesh.material = dark_metal
+    base.mesh = base_mesh
+    base.position = Vector3(0,0.72,0.2)
+    stage.add_child(base)
+    var deck := MeshInstance3D.new()
+    var deck_mesh := CylinderMesh.new()
+    deck_mesh.top_radius = 5.05
+    deck_mesh.bottom_radius = 5.05
+    deck_mesh.height = 0.08
+    deck_mesh.radial_segments = 64
+    deck_mesh.material = panel_mat
+    deck.mesh = deck_mesh
+    deck.position = Vector3(0,0.96,0.2)
+    stage.add_child(deck)
+
+    for radius in [4.55,5.25]:
+        var ring := MeshInstance3D.new()
+        var ring_mesh := TorusMesh.new()
+        ring_mesh.inner_radius = radius-0.035
+        ring_mesh.outer_radius = radius+0.035
+        ring_mesh.rings = 8
+        ring_mesh.ring_segments = 64
+        ring_mesh.material = cyan_mat if radius < 5.0 else gold_mat
+        ring.mesh = ring_mesh
+        ring.position = Vector3(0,1.02,0.2)
+        stage.add_child(ring)
+
+    # Painéis e pilares de uma base militar tecnológica ao fundo.
     for side in [-1.0,1.0]:
-        for y in [2.7,5.25]:
-            _box(stage,Vector3(2.15,1.65,0.12),Vector3(side*7.2,y,-12.43),window_mat)
-            _box(stage,Vector3(2.45,0.13,0.18),Vector3(side*7.2,y+0.9,-12.36),metal)
-            _box(stage,Vector3(0.13,1.9,0.18),Vector3(side*7.2,y,-12.34),metal)
+        var pillar := _box(stage,Vector3(0.48,5.2,0.55),Vector3(side*8.2,2.55,-13.5),dark_metal)
+        pillar.rotation.z = side*0.06
+        _box(stage,Vector3(3.4,0.18,0.32),Vector3(side*6.5,4.9,-13.1),gold_mat)
+        _box(stage,Vector3(2.5,2.5,0.22),Vector3(side*6.3,2.5,-13.0),panel_mat)
+        _box(stage,Vector3(0.08,2.0,0.08),Vector3(side*6.3,2.5,-12.86),cyan_mat)
 
-    # Torre central, relógio e lua cheia.
-    _box(stage,Vector3(7.2,6,6.2),Vector3(0,10.2,-20),wall)
-    var tower_roof := _box(stage,Vector3(8.8,0.35,7.5),Vector3(0,13.35,-20),roof)
-    tower_roof.rotation.z = 0.18
-    var clock_mat := StandardMaterial3D.new()
-    clock_mat.albedo_color = Color(1,0.52,0.16)
-    clock_mat.emission_enabled = true
-    clock_mat.emission = Color(1,0.24,0.045)
-    clock_mat.emission_energy_multiplier = 2.4
-    var clock := MeshInstance3D.new()
-    var clock_mesh := SphereMesh.new()
-    clock_mesh.radius = 0.62
-    clock_mesh.height = 0.16
-    clock_mesh.material = clock_mat
-    clock.mesh = clock_mesh
-    clock.position = Vector3(0,10.4,-16.68)
-    stage.add_child(clock)
-    var moon_mat := StandardMaterial3D.new()
-    moon_mat.albedo_color = Color(0.72,0.73,0.82)
-    moon_mat.emission_enabled = true
-    moon_mat.emission = Color(0.38,0.40,0.58)
-    moon_mat.emission_energy_multiplier = 0.8
-    var moon := MeshInstance3D.new()
-    var moon_mesh := SphereMesh.new()
-    moon_mesh.radius = 5.2
-    moon_mesh.height = 10.4
-    moon_mesh.material = moon_mat
-    moon.mesh = moon_mesh
-    moon.position = Vector3(-15,14,-38)
-    stage.add_child(moon)
+    var gateway := _box(stage,Vector3(7.2,0.32,0.42),Vector3(0,5.35,-13.3),dark_metal)
+    gateway.rotation.z = 0.0
+    _box(stage,Vector3(5.6,0.08,0.12),Vector3(0,5.15,-13.02),cyan_mat)
 
-    # Árvores retorcidas, lápides e abóboras.
+    # Montanhas ao horizonte para dar profundidade à ilha.
+    for i in range(9):
+        var mountain := MeshInstance3D.new()
+        var mountain_mesh := CylinderMesh.new()
+        mountain_mesh.top_radius = 0.0
+        mountain_mesh.bottom_radius = 7.0+float(i%3)*2.0
+        mountain_mesh.height = 11.0+float(i%4)*2.0
+        mountain_mesh.radial_segments = 5
+        mountain_mesh.material = _mat(Color("#142D40") if i%2==0 else Color("#1B3B4B"),0.95)
+        mountain.mesh = mountain_mesh
+        mountain.position = Vector3(-34.0+float(i)*8.5,3.5,-43.0-float(i%3)*2.0)
+        stage.add_child(mountain)
+
+    # Palmeiras estilizadas nas laterais, deixando o personagem livre no centro.
     for side in [-1.0,1.0]:
-        for i in range(4):
-            var tx: float = float(side)*(13.0+float(i%2)*5.0)
-            var tz := -7.0-float(i)*6.0
+        for i in range(3):
+            var px := side*(11.0+float(i%2)*4.0)
+            var pz := -3.0-float(i)*6.0
             var trunk := MeshInstance3D.new()
             var trunk_mesh := CylinderMesh.new()
-            trunk_mesh.top_radius = 0.13
-            trunk_mesh.bottom_radius = 0.42
-            trunk_mesh.height = 5.8+float(i%2)*1.4
-            trunk_mesh.radial_segments = 7
-            trunk_mesh.material = metal
+            trunk_mesh.top_radius = 0.16
+            trunk_mesh.bottom_radius = 0.34
+            trunk_mesh.height = 5.8
+            trunk_mesh.radial_segments = 10
+            trunk_mesh.material = _mat(Color("#594B3B"),0.95)
             trunk.mesh = trunk_mesh
-            trunk.position = Vector3(tx,2.7,tz)
-            trunk.rotation.z = side*0.12
+            trunk.position = Vector3(px,2.9,pz)
+            trunk.rotation.z = -side*0.10
             stage.add_child(trunk)
-            for branch in [-1.0,1.0]:
-                var limb := _box(stage,Vector3(0.18,3.4,0.2),Vector3(tx+branch*0.75,4.35,tz),metal)
-                limb.rotation.z = branch*side*0.62
-        for i in range(3):
-            var grave := _box(stage,Vector3(1,1.45,0.28),Vector3(side*(10+float(i)*2.1),0.55,3.5-float(i)*2.5),stone)
-            grave.rotation.z = side*0.08
-            _box(stage,Vector3(0.14,0.42,0.34),grave.position+Vector3(0,0.88,0),trim)
+            for leaf in range(5):
+                var frond := MeshInstance3D.new()
+                var frond_mesh := SphereMesh.new()
+                frond_mesh.radius = 1.0
+                frond_mesh.height = 0.22
+                frond_mesh.radial_segments = 10
+                frond_mesh.rings = 5
+                frond_mesh.material = _mat(Color("#167B70"),0.8)
+                frond.mesh = frond_mesh
+                frond.scale = Vector3(1.8,0.48,0.42)
+                frond.position = Vector3(px+cos(float(leaf)*TAU/5.0)*1.25,5.65,pz+sin(float(leaf)*TAU/5.0)*1.25)
+                frond.rotation.y = -float(leaf)*TAU/5.0
+                frond.rotation.z = side*0.22
+                stage.add_child(frond)
 
-    var pumpkin_mat := StandardMaterial3D.new()
-    pumpkin_mat.albedo_color = Color(0.95,0.22,0.025)
-    pumpkin_mat.emission_enabled = true
-    pumpkin_mat.emission = Color(1,0.12,0.015)
-    pumpkin_mat.emission_energy_multiplier = 1.1
-    for pos in [Vector3(-4.2,0.22,2.5),Vector3(4.2,0.22,2.5),Vector3(-8.5,0.22,-3),Vector3(8.5,0.22,-3)]:
-        var pumpkin := MeshInstance3D.new()
-        var pumpkin_mesh := SphereMesh.new()
-        pumpkin_mesh.radius = 0.58
-        pumpkin_mesh.height = 0.92
-        pumpkin_mesh.radial_segments = 12
-        pumpkin_mesh.rings = 8
-        pumpkin_mesh.material = pumpkin_mat
-        pumpkin.mesh = pumpkin_mesh
-        pumpkin.position = pos
-        stage.add_child(pumpkin)
-        _box(stage,Vector3(0.14,0.28,0.14),pos+Vector3(0,0.55,0),_mat(Color(0.12,0.22,0.07),0.9))
-
-    # Arandelas de fogo e iluminação dramática.
+    # Luzes de pista e pequenos terminais laterais.
     for side in [-1.0,1.0]:
-        for z in [-7.0,1.0]:
-            _box(stage,Vector3(0.22,2.5,0.22),Vector3(side*8.8,1.1,z),metal)
-            _box(stage,Vector3(0.9,0.16,0.9),Vector3(side*8.8,2.35,z),trim)
-            var flame := OmniLight3D.new()
-            flame.position = Vector3(side*8.8,2.75,z)
-            flame.light_color = Color(1,0.22,0.045)
-            flame.light_energy = 1.8
-            flame.omni_range = 8
-            stage.add_child(flame)
+        for i in range(4):
+            var z := 2.0-float(i)*3.0
+            _box(stage,Vector3(0.12,0.7,0.12),Vector3(side*6.8,1.2,z),dark_metal)
+            _box(stage,Vector3(0.32,0.08,0.32),Vector3(side*6.8,1.58,z),cyan_mat)
+        _box(stage,Vector3(1.2,1.8,0.65),Vector3(side*9.0,0.95,-1.5),panel_mat)
+        _box(stage,Vector3(0.08,1.1,0.08),Vector3(side*8.35,1.0,-1.5),gold_mat)
 
-    # Personagem central com luz quente frontal e recorte violeta.
-    _box(stage,Vector3(4.6,0.22,3.8),Vector3(0,-0.12,0),metal)
-    _box(stage,Vector3(4.35,0.07,3.55),Vector3(0,0.015,0),trim)
+    # Personagem em primeiro plano, com iluminação de recorte.
     var model := Node3D.new()
     model.name = "LobbyCharacter"
-    model.position = Vector3(0,0.12,0.12)
-    model.scale = Vector3(1.42,1.42,1.42)
+    model.position = Vector3(0,1.02,0.28)
+    model.scale = Vector3(1.72,1.72,1.72)
     stage.add_child(model)
     _build_player_armor(model)
     _build_weapon_model(model)
+
     var key_light := OmniLight3D.new()
-    key_light.position = Vector3(0,5,4)
-    key_light.light_color = Color(1,0.66,0.43)
-    key_light.light_energy = 2.5
-    key_light.omni_range = 15
+    key_light.position = Vector3(0,4.2,4.0)
+    key_light.light_color = Color("#FFE1B0")
+    key_light.light_energy = 2.1
+    key_light.omni_range = 13.0
     stage.add_child(key_light)
     var rim_light := OmniLight3D.new()
-    rim_light.position = Vector3(-4.5,4,-3)
-    rim_light.light_color = Color(0.30,0.22,1)
-    rim_light.light_energy = 2.2
-    rim_light.omni_range = 12
+    rim_light.position = Vector3(-4.5,4.0,-4.0)
+    rim_light.light_color = Color("#42D7E8")
+    rim_light.light_energy = 2.6
+    rim_light.omni_range = 14.0
     stage.add_child(rim_light)
-    var moon_light := OmniLight3D.new()
-    moon_light.position = Vector3(-14,13,-31)
-    moon_light.light_color = Color(0.35,0.42,1)
-    moon_light.light_energy = 1
-    moon_light.omni_range = 30
-    stage.add_child(moon_light)
+    var warm_light := OmniLight3D.new()
+    warm_light.position = Vector3(5.0,3.0,-8.0)
+    warm_light.light_color = Color("#F6C34A")
+    warm_light.light_energy = 1.5
+    warm_light.omni_range = 12.0
+    stage.add_child(warm_light)
 
     var lobby_camera := get_node_or_null("LobbyCamera") as Camera3D
     if lobby_camera:
-        lobby_camera.position = Vector3(0,2.45,9.2)
-        lobby_camera.look_at(Vector3(0,3.15,-8),Vector3.UP)
-        lobby_camera.fov = 48
+        lobby_camera.position = Vector3(0,2.15,6.7)
+        lobby_camera.look_at(Vector3(0,1.75,-3.0),Vector3.UP)
+        lobby_camera.fov = 52
 
 func _royale() -> void:
     mode = "royale"
