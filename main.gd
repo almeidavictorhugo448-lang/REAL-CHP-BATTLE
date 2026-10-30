@@ -118,6 +118,13 @@ func _world_lighting() -> void:
     add_child(sun)
 
 func _reset_ui() -> void:
+    # A interface de batalha é recriada ao trocar de tela; descarte referências antigas.
+    toast = null
+    battle_ui = null
+    hp_text = null
+    ammo_text = null
+    top_text = null
+    zone_text = null
     if ui and is_instance_valid(ui):
         var old_layer := ui.get_parent()
         if old_layer and is_instance_valid(old_layer):
@@ -341,7 +348,17 @@ func _settings() -> void:
     var back:=_btn(ui,"← VOLTAR",Vector2(30,get_viewport().size.y-72),Vector2(150,50),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
 
 func _start() -> void:
-    mode="battle"; _reset_ui(); _clear_world(); _build_map(); _player(); _battle_ui(); _bots(); _loot(); _toast("PARTIDA INICIADA — SOBREVIVA!")
+    mode = "battle"
+    _reset_ui()
+    _clear_world()
+    _build_map()
+    _player()
+    _battle_ui()
+    _bots()
+    _loot()
+    _layout_battle()
+    _hud()
+    _toast("PARTIDA INICIADA — SOBREVIVA!")
 
 func _clear_world() -> void:
     if player and is_instance_valid(player): player.queue_free()
