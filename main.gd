@@ -63,6 +63,7 @@ var joy_id := -1
 var joy_start := Vector2.ZERO
 var joy_pos := Vector2.ZERO
 var look_id := -1
+var fire_held := false
 
 var ui: Control
 var battle_ui: Control
@@ -526,7 +527,9 @@ func _battle_ui() -> void:
     joy_base=Panel.new(); joy_base.size=Vector2(132,132); joy_base.add_theme_stylebox_override("panel",_style(Color(0.04,0.09,0.12,0.45),Color(0.5,0.85,0.8,0.65),70)); joy_base.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_base)
     joy_knob=Panel.new(); joy_knob.size=Vector2(58,58); joy_knob.add_theme_stylebox_override("panel",_style(Color(0.25,0.85,0.80,0.75),Color.WHITE,40)); joy_knob.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_knob)
     fire=_btn(battle_ui,"ATIRAR",Vector2.ZERO,Vector2(112,112),Color(0.72,0.10,0.10)); reload=_btn(battle_ui,"RECARREGAR",Vector2.ZERO,Vector2(145,50),Color(0.16,0.28,0.36)); ability=_btn(battle_ui,"DRAGÃO",Vector2.ZERO,Vector2(155,58),Color(0.10,0.46,0.38)); medkit=_btn(battle_ui,"KIT +50",Vector2.ZERO,Vector2(105,48),Color(0.14,0.38,0.24)); aim=_btn(battle_ui,"MIRA",Vector2.ZERO,Vector2(82,48),Color(0.20,0.28,0.40))
-    fire.pressed.connect(_shoot); reload.pressed.connect(_reload); ability.pressed.connect(_ability); medkit.pressed.connect(_medkit); aim.button_down.connect(func():camera.fov=48); aim.button_up.connect(func():camera.fov=72)
+    fire.button_down.connect(func(): fire_held=true; _shoot())
+    fire.button_up.connect(func(): fire_held=false)
+    reload.pressed.connect(_reload); ability.pressed.connect(_ability); medkit.pressed.connect(_medkit); aim.button_down.connect(func():camera.fov=48); aim.button_up.connect(func():camera.fov=72)
     var leave:=_btn(battle_ui,"☰",Vector2(18,92),Vector2(52,48),Color(0.12,0.15,0.18)); leave.pressed.connect(_lobby)
     _layout_battle()
 
@@ -538,7 +541,7 @@ func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
     shot_tick=maxf(0,shot_tick-delta); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
-    if fire and is_instance_valid(fire) and fire.button_pressed and reload_tick<=0:
+    if fire_held and reload_tick<=0:
         _shoot()
     if reload_tick>0:
         reload_tick-=delta
