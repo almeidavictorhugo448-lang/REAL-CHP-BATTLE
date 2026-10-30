@@ -950,7 +950,7 @@ func _physics_process(delta:float) -> void:
             match_phase="landed"
             var canopy=player.get_node_or_null("ParachuteCanopy")
             if canopy: canopy.queue_free()
-            for control in [fire,switch_weapon,reload,ability,medkit,aim,joy_base,joy_knob]:
+            for control in [fire,switch_weapon,reload,ability,medkit,aim,gloo_button,joy_base,joy_knob]:
                 control.visible=true
             _toast("POUSO CONCLUÍDO — BOA PARTIDA!")
         return
