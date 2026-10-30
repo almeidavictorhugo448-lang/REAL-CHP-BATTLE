@@ -122,7 +122,20 @@ var skins := {
     "Marli":["Original","Rosa","Imperial"]
 }
 
+func _notification(what:int) -> void:
+    if what != NOTIFICATION_WM_CLOSE_REQUEST:
+        return
+    if mode == "battle" and not match_done:
+        # Fechar/sair durante uma partida conta como abandono e derrota.
+        if match_phase == "airborne" or match_phase == "landed":
+            _end(false)
+        _lobby()
+        get_tree().set_auto_accept_quit(false)
+    else:
+        get_tree().quit()
+
 func _ready() -> void:
+    get_tree().set_auto_accept_quit(false)
     _load_settings()
     _load_profile()
     _world_lighting()
