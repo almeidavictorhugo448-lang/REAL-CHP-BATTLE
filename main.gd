@@ -171,18 +171,58 @@ func _style(bg:Color,border:Color,r:=16) -> StyleBoxFlat:
     return s
 
 func _lobby() -> void:
-    mode="lobby"; _clear_world(); _reset_ui(); _bg(Color(0.006,0.010,0.018,1))
-    var logo:=TextureRect.new(); logo.texture=load("res://assets/real_chapero.png"); logo.position=Vector2(get_viewport().size.x*0.33,28); logo.size=Vector2(220,220); logo.expand_mode=TextureRect.EXPAND_IGNORE_SIZE; logo.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED; ui.add_child(logo)
-    var title:=_txt(ui,"PUNK",Vector2(0,145),Vector2(get_viewport().size.x,90),64); title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; title.add_theme_color_override("font_color",Color(0.78,0.90,1))
-    var sub:=_txt(ui,"V1 • 3D SHOOTER EM DESENVOLVIMENTO",Vector2(0,304),Vector2(get_viewport().size.x,30),17); sub.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; sub.add_theme_color_override("font_color",Color(0.30,0.95,0.82))
-    var play:=_btn(ui,"▶  JOGAR",Vector2(get_viewport().size.x/2-170,355),Vector2(340,64),Color(0.08,0.50,0.37)); play.pressed.connect(_start)
-    var ch:=_btn(ui,"♙  PERSONAGENS / SKINS",Vector2(get_viewport().size.x/2-170,430),Vector2(340,56)); ch.pressed.connect(_characters)
-    var inv:=_btn(ui,"▣  INVENTÁRIO",Vector2(get_viewport().size.x/2-170,497),Vector2(340,56),Color(0.14,0.25,0.36)); inv.pressed.connect(_inventory)
-    var vault:=_btn(ui,"▣  COFRE DE ROUPAS",Vector2(get_viewport().size.x/2-170,564),Vector2(340,52),Color(0.24,0.16,0.38)); vault.pressed.connect(_wardrobe)
-    var arsenal:=_btn(ui,"⚔  ARSENAL",Vector2(get_viewport().size.x/2-170,623),Vector2(160,48),Color(0.12,0.28,0.42)); arsenal.pressed.connect(_inventory)
-    var royale:=_btn(ui,"✦  ROYALE",Vector2(get_viewport().size.x/2+10,623),Vector2(160,48),Color(0.48,0.22,0.08)); royale.pressed.connect(_royale)
-    var st:=_btn(ui,"⚙  CONFIGURAÇÕES",Vector2(get_viewport().size.x/2-170,678),Vector2(340,48),Color(0.18,0.21,0.25)); st.pressed.connect(_settings)
-    var foot:=_txt(ui,"PUNK V1     |     🪙 %d"%coins,Vector2(0,get_viewport().size.y-34),Vector2(get_viewport().size.x,25),13); foot.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+    mode = "lobby"
+    _clear_world()
+    _reset_ui()
+    _bg(Color(0.006, 0.010, 0.018, 1))
+    var viewport_size := get_viewport().get_visible_rect().size
+    var width := viewport_size.x
+    var height := viewport_size.y
+    var center := width * 0.5
+    var button_width := minf(340.0, width - 40.0)
+    var left := center - button_width * 0.5
+    var logo_size := minf(150.0, width * 0.34)
+    var logo := TextureRect.new()
+    logo.texture = load("res://assets/real_chapero.png")
+    logo.position = Vector2(center - logo_size * 0.5, 8)
+    logo.size = Vector2(logo_size, logo_size)
+    logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    ui.add_child(logo)
+    var title_y := logo_size + 2.0
+    var title := _txt(ui, "PUNK", Vector2(0, title_y), Vector2(width, 66), 52)
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_color_override("font_color", Color(0.78, 0.90, 1))
+    var sub := _txt(ui, "V1 • 3D SHOOTER EM DESENVOLVIMENTO", Vector2(0, title_y + 58), Vector2(width, 26), 14)
+    sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    sub.add_theme_color_override("font_color", Color(0.30, 0.95, 0.82))
+    var available := maxf(300.0, height - (title_y + 105.0) - 54.0)
+    var gap := minf(12.0, available * 0.025)
+    var main_h := minf(54.0, (available - gap * 5.0) / 6.0)
+    var y := title_y + 100.0
+    var play := _btn(ui, "▶  JOGAR", Vector2(left, y), Vector2(button_width, main_h), Color(0.08, 0.50, 0.37))
+    play.pressed.connect(_start)
+    y += main_h + gap
+    var ch := _btn(ui, "♙  PERSONAGENS / SKINS", Vector2(left, y), Vector2(button_width, main_h), Color(0.10, 0.40, 0.34))
+    ch.pressed.connect(_characters)
+    y += main_h + gap
+    var inv := _btn(ui, "▣  INVENTÁRIO", Vector2(left, y), Vector2(button_width, main_h), Color(0.14, 0.25, 0.36))
+    inv.pressed.connect(_inventory)
+    y += main_h + gap
+    var vault := _btn(ui, "▣  COFRE DE ROUPAS", Vector2(left, y), Vector2(button_width, main_h), Color(0.24, 0.16, 0.38))
+    vault.pressed.connect(_wardrobe)
+    y += main_h + gap
+    var half_gap := 8.0
+    var half_width := (button_width - half_gap) * 0.5
+    var arsenal := _btn(ui, "⚔  ARSENAL", Vector2(left, y), Vector2(half_width, main_h), Color(0.12, 0.28, 0.42))
+    arsenal.pressed.connect(_inventory)
+    var royale := _btn(ui, "✦  ROYALE", Vector2(left + half_width + half_gap, y), Vector2(half_width, main_h), Color(0.48, 0.22, 0.08))
+    royale.pressed.connect(_royale)
+    y += main_h + gap
+    var settings := _btn(ui, "⚙  CONFIGURAÇÕES", Vector2(left, y), Vector2(button_width, main_h), Color(0.18, 0.21, 0.25))
+    settings.pressed.connect(_settings)
+    var foot := _txt(ui, "PUNK V1     |     🪙 %d" % coins, Vector2(0, height - 30), Vector2(width, 24), 13)
+    foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _wardrobe() -> void:
     mode = "wardrobe"
