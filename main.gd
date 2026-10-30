@@ -23,6 +23,7 @@ var active_weapon := "UMP"
 var weapon_damage := {"UMP":28.0,"XM8":30.0,"Águia do Deserto":48.0,"M1014":22.0,"MP40":19.0}
 var weapon_cadence := {"UMP":0.13,"XM8":0.15,"Águia do Deserto":0.38,"M1014":0.48,"MP40":0.075}
 var weapon_mag := {"UMP":30,"XM8":30,"Águia do Deserto":7,"M1014":6,"MP40":32}
+var weapon_reload := {"UMP":1.5,"XM8":1.7,"Águia do Deserto":1.25,"M1014":1.9,"MP40":1.4}
 var weapon_catalog := ["UMP", "XM8", "Águia do Deserto", "M1014", "MP40"]
 var weapon_skin_catalog := ["Original", "Dragão de Fogo", "Gelo Eterno", "Ouro Imperial", "Neon Roxo"]
 var weapon_skin_owned := {
@@ -684,7 +685,7 @@ func _switch_weapon() -> void:
     _toast("ARMA: "+active_weapon)
 
 func _reload() -> void:
-    if reload_tick<=0 and ammo<_mag_size(): reload_tick=1.5; _toast("RECARREGANDO...")
+    if reload_tick<=0 and ammo<_mag_size(): reload_tick=float(weapon_reload.get(active_weapon,1.5)); _toast("RECARREGANDO "+active_weapon+"...")
 func _medkit() -> void:
     if medkits>0 and hp<MAX_HP: medkits-=1; hp=minf(MAX_HP,hp+50); _toast("KIT MÉDICO +50")
 func _ability() -> void:
