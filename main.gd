@@ -108,6 +108,7 @@ var medkit: Button
 var switch_weapon: Button
 var gloo_button: Button
 var gloo_charges := 12
+var airdrop_spawned := false
 var active_gloo_walls: Array[StaticBody3D] = []
 
 var chars := {
@@ -538,6 +539,7 @@ func _start() -> void:
     kills=0
     gloo_charges=12
     active_gloo_walls.clear()
+    airdrop_spawned=false
     hp=_max_player_hp()
     shield=0
     energy=MAX_ENERGY
@@ -799,6 +801,26 @@ func _spawn_ground_loot(spot:Vector3,kind:String,amount:int) -> void:
     a.add_child(m)
     loot.append(a)
 
+func _spawn_airdrop() -> void:
+    var spots=[Vector3(-30,0,-20),Vector3(28,0,-24),Vector3(-26,0,27),Vector3(30,0,28),Vector3(0,0,0)]
+    var spot:Vector3=spots[randi_range(0,spots.size()-1)]
+    _drop_death_loot(spot,{"MUNIÇÃO":90,"KIT":2,"COLETE":2,"GELO":4,"ENERGIA":100})
+    var crate:Area3D=null
+    for item in loot:
+        if is_instance_valid(item) and item.name=="Caixa_de_Loot" and item.global_position.distance_to(spot)<0.5:
+            crate=item
+    if crate:
+        crate.name="Suprimento_PUNK"
+        crate.set_meta("airdrop",true)
+        var box_mesh:=crate.get_node_or_null("MeshInstance3D") as MeshInstance3D
+        if box_mesh:
+            box_mesh.scale=Vector3(1.65,1.35,1.65)
+            box_mesh.position.y=0.15
+            var box:=box_mesh.mesh as BoxMesh
+            if box:
+                box.material=_mat(Color(0.82,0.16,0.10))
+    _toast("🚁 SUPRIMENTO AÉREO CHEGOU! PROCURE O SINAL VERMELHO")
+
 func _drop_death_loot(spot:Vector3,contents:Dictionary) -> void:
     var has_items:=false
     for value in contents.values():
@@ -983,6 +1005,9 @@ func _physics_process(delta:float) -> void:
             var loaded:=mini(needed,reserve_ammo)
             ammo+=loaded
             reserve_ammo-=loaded
+    if not airdrop_spawned and time_left <= START_TIME - 90.0:
+        airdrop_spawned=true
+        _spawn_airdrop()
     if zone_tick>12:
         zone_tick=0
         zone=maxf(18,zone-1.6)
@@ -1229,7 +1254,7 @@ func _pickup() -> void:
                             "KIT": medkits+=count
                             "GELO": shield=minf(90,shield+count*20)
                             "ENERGIA": energy=minf(MAX_ENERGY,energy+count*35)
-            loot.erase(a); a.queue_free(); _toast("PEGOU "+("CAIXA DE LOOT" if k=="CAIXA" else k))
+            loot.erase(a); a.queue_free(); _toast("PEGOU "+("SUPRIMENTO AÉREO" if bool(a.get_meta("airdrop",false)) else ("CAIXA DE LOOT" if k=="CAIXA" else k)))
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
     ammo_text.text="%s • %s  %02d/%02d  |  RES %03d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size(),reserve_ammo]
