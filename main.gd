@@ -650,7 +650,9 @@ func _loot() -> void:
     var kinds=["MUNIÇÃO","COLETE","KIT","GELO","ENERGIA"]
     var spots=[Vector3(-34,0,-31),Vector3(-30,0,-27),Vector3(-25,0,-32),Vector3(29,0,-34),Vector3(34,0,-29),Vector3(25,0,-27),Vector3(-36,0,22),Vector3(-31,0,27),Vector3(-27,0,21),Vector3(30,0,25),Vector3(35,0,30),Vector3(25,0,34),Vector3(-8,0,-8),Vector3(8,0,8),Vector3(0,0,34),Vector3(0,0,-37),Vector3(40,0,0),Vector3(-40,0,0)]
     for i in range(spots.size()):
-        _spawn_ground_loot(spots[i],kinds[i%kinds.size()],1)
+        var kind:String = kinds[i%kinds.size()]
+        var amount := 30 if kind=="MUNIÇÃO" else (35 if kind=="COLETE" else (1 if kind=="KIT" else (20 if kind=="GELO" else 70)))
+        _spawn_ground_loot(spots[i],kind,amount)
 
 func _spawn_ground_loot(spot:Vector3,kind:String,amount:int) -> void:
     if amount<=0: return
@@ -932,6 +934,7 @@ func _switch_weapon() -> void:
     ammo=mini(_mag_size(),reserve_ammo)
     reserve_ammo-=ammo
     reload_tick=0.0
+    _save_profile()
     _hud()
     _toast("ARMA: "+active_weapon)
 
@@ -968,12 +971,13 @@ func _pickup() -> void:
             continue
         if player.global_position.distance_to(a.global_position)<1.7:
             var k:String=a.get_meta("kind")
+            var amount := maxi(1,int(a.get_meta("amount",1)))
             match k:
-                "MUNIÇÃO": reserve_ammo=min(240,reserve_ammo+30)
-                "COLETE": shield=minf(70,shield+35)
-                "KIT": medkits+=1
-                "GELO": shield=minf(90,shield+20)
-                "ENERGIA": energy=minf(MAX_ENERGY,energy+70)
+                "MUNIÇÃO": reserve_ammo=mini(240,reserve_ammo+amount)
+                "COLETE": shield=minf(90,shield+amount)
+                "KIT": medkits+=amount
+                "GELO": shield=minf(90,shield+amount)
+                "ENERGIA": energy=minf(MAX_ENERGY,energy+amount)
                 "CAIXA":
                     var contents:Dictionary=a.get_meta("contents",{})
                     for item in contents:
