@@ -112,8 +112,24 @@ var skins := {
 }
 
 func _ready() -> void:
+    _load_settings()
     _world_lighting()
     _lobby()
+
+func _load_settings() -> void:
+    var config := ConfigFile.new()
+    if config.load("user://punk_settings.cfg") != OK:
+        return
+    for name in sensitivities.keys():
+        sensitivities[name] = clampf(float(config.get_value("sensitivities", name, sensitivities[name])), 0.0, 200.0)
+
+func _save_settings() -> void:
+    var config := ConfigFile.new()
+    for name in sensitivities.keys():
+        config.set_value("sensitivities", name, sensitivities[name])
+    var error := config.save("user://punk_settings.cfg")
+    if error != OK:
+        push_warning("Não foi possível salvar as configurações: %s" % error)
 
 func _world_lighting() -> void:
     var e := WorldEnvironment.new()
@@ -420,8 +436,9 @@ func _settings() -> void:
     var back:=_btn(ui,"← VOLTAR",Vector2(24,get_viewport().size.y-62),Vector2(150,46),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
 
 func _set_sensitivity(value:float,name:String,label:Label) -> void:
-    sensitivities[name]=value
-    label.text=name.to_upper()+"  •  "+str(int(value))
+    sensitivities[name]=clampf(value,0.0,200.0)
+    label.text=name.to_upper()+"  •  "+str(int(sensitivities[name]))
+    _save_settings()
 
 func _start() -> void:
     fire_held=false
