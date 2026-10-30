@@ -911,7 +911,95 @@ func _box(parent:Node,size:Vector3,pos:Vector3,mat:Material)->MeshInstance3D:
 func _wall(parent:Node,pos:Vector3,size:Vector3)->void:
     var b:=StaticBody3D.new(); b.position=pos; parent.add_child(b); _box(b,size,Vector3.ZERO,_mat(Color(0.35,0.39,0.39))); var c:=CollisionShape3D.new(); var s:=BoxShape3D.new(); s.size=size; c.shape=s; b.add_child(c)
 func _house(parent:Node,pos:Vector3,size:Vector3,wall:Color,roof:Color)->void:
-    var b:=StaticBody3D.new(); b.position=pos+Vector3(0,size.y/2,0); parent.add_child(b); _box(b,size,Vector3.ZERO,_mat(wall)); _box(b,Vector3(size.x+0.7,0.5,size.z+0.7),Vector3(0,size.y/2+0.25,0),_mat(roof)); _box(b,Vector3(1.3,2.3,0.15),Vector3(0,-size.y/2+1.15,size.z/2+0.08),_mat(Color(0.15,0.09,0.07))); for x in [-size.x*0.28,size.x*0.28]: _box(b,Vector3(1.3,0.9,0.14),Vector3(x,0.15,size.z/2+0.09),_mat(Color(0.10,0.48,0.62),0.25,0.1)); var c:=CollisionShape3D.new(); var s:=BoxShape3D.new(); s.size=size; c.shape=s; b.add_child(c)
+    # Construção modular: paredes separadas deixam portas e janelas realmente vazadas.
+    var building:=Node3D.new()
+    building.position=pos
+    parent.add_child(building)
+    var half_x:=size.x*0.5
+    var half_z:=size.z*0.5
+    var h:=size.y
+    var t:=0.34
+    var wall_mat:=_mat(wall,0.88)
+    var roof_mat:=_mat(roof,0.82)
+    var trim_mat:=_mat(roof.lightened(0.22),0.72)
+    var dark_mat:=_mat(Color(0.075,0.085,0.09),0.28)
+    var glass_mat:=StandardMaterial3D.new()
+    glass_mat.albedo_color=Color(0.10,0.43,0.58,0.72)
+    glass_mat.metallic=0.18
+    glass_mat.roughness=0.16
+    glass_mat.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
+
+    # Fundo e laterais com colisão independente.
+    _house_wall(building,Vector3(size.x,h,t),Vector3(0,h*0.5,-half_z),wall_mat)
+    _house_wall(building,Vector3(t,h,size.z),Vector3(-half_x,h*0.5,0),wall_mat)
+    _house_wall(building,Vector3(t,h,size.z),Vector3(half_x,h*0.5,0),wall_mat)
+
+    # Fachada frontal com vão de porta central e duas janelas.
+    var door_w:=minf(1.55,size.x*0.24)
+    var door_h:=minf(2.25,h*0.78)
+    var side_w:=(size.x-door_w)*0.5
+    _house_wall(building,Vector3(side_w,h,t),Vector3(-half_x+side_w*0.5,h*0.5,half_z),wall_mat)
+    _house_wall(building,Vector3(side_w,h,t),Vector3(half_x-side_w*0.5,h*0.5,half_z),wall_mat)
+    _house_wall(building,Vector3(door_w,h-door_h,t),Vector3(0,door_h+(h-door_h)*0.5,half_z),wall_mat)
+
+    # Piso, telhado e beiral.
+    _box(building,Vector3(size.x,0.22,size.z),Vector3(0,0.02,0),_mat(Color(0.30,0.29,0.25),0.95))
+    _box(building,Vector3(size.x+0.9,0.42,size.z+0.9),Vector3(0,h+0.18,0),roof_mat)
+    _box(building,Vector3(size.x+1.05,0.13,0.18),Vector3(0,h+0.43,half_z+0.35),trim_mat)
+    _box(building,Vector3(size.x+1.05,0.13,0.18),Vector3(0,h+0.43,-half_z-0.35),trim_mat)
+    _box(building,Vector3(0.18,0.13,size.z+0.7),Vector3(-half_x-0.35,h+0.43,0),trim_mat)
+    _box(building,Vector3(0.18,0.13,size.z+0.7),Vector3(half_x+0.35,h+0.43,0),trim_mat)
+
+    # Porta, moldura e degrau frontal.
+    _box(building,Vector3(door_w+0.28,0.12,0.16),Vector3(0,door_h+0.04,half_z+0.22),trim_mat)
+    _box(building,Vector3(0.13,door_h,0.16),Vector3(-door_w*0.5-0.06,door_h*0.5,half_z+0.22),trim_mat)
+    _box(building,Vector3(0.13,door_h,0.16),Vector3(door_w*0.5+0.06,door_h*0.5,half_z+0.22),trim_mat)
+    _box(building,Vector3(door_w*0.82,door_h*0.88,0.08),Vector3(0,door_h*0.46,half_z+0.10),dark_mat)
+    _box(building,Vector3(0.08,0.08,0.04),Vector3(door_w*0.27,door_h*0.48,half_z+0.16),trim_mat)
+    _box(building,Vector3(door_w+0.45,0.22,0.95),Vector3(0,0.11,half_z+0.52),_mat(Color(0.43,0.42,0.36)))
+
+    # Janelas laterais da fachada com peitoril e molduras metálicas.
+    for side in [-1.0,1.0]:
+        var wx:=side*(door_w*0.5+side_w*0.5)
+        var ww:=minf(1.65,side_w*0.48)
+        var wy:=h*0.57
+        _box(building,Vector3(ww+0.28,1.05,0.12),Vector3(wx,wy,half_z+0.20),trim_mat)
+        _box(building,Vector3(ww,0.78,0.045),Vector3(wx,wy,half_z+0.275),glass_mat)
+        _box(building,Vector3(0.07,0.92,0.06),Vector3(wx,wy,half_z+0.31),dark_mat)
+        _box(building,Vector3(ww+0.35,0.10,0.28),Vector3(wx,wy-0.56,half_z+0.30),trim_mat)
+
+    # Janelas menores nas laterais e detalhes de fachada.
+    for side in [-1.0,1.0]:
+        var sx:=side*(half_x+0.19)
+        _box(building,Vector3(0.05,0.92,1.35),Vector3(sx,h*0.58,0),glass_mat)
+        _box(building,Vector3(0.12,1.08,0.12),Vector3(sx*1.015,h*0.58,-0.72),trim_mat)
+        _box(building,Vector3(0.12,1.08,0.12),Vector3(sx*1.015,h*0.58,0.72),trim_mat)
+
+    # Acabamento de canto, luminária e ventilação no telhado.
+    for x in [-half_x,half_x]:
+        for z in [-half_z,half_z]:
+            _box(building,Vector3(0.16,h+0.12,0.16),Vector3(x,h*0.5,z),trim_mat)
+    _box(building,Vector3(0.34,0.42,0.18),Vector3(0, h-0.35, half_z+0.18),_mat(Color(0.92,0.70,0.28),0.25))
+    _box(building,Vector3(1.1,0.5,0.8),Vector3(-half_x*0.55,h+0.62,-half_z*0.45),_mat(Color(0.28,0.31,0.32),0.55))
+    for i in range(3):
+        _box(building,Vector3(0.72,0.055,0.10),Vector3(-half_x*0.55,h+0.88,-half_z*0.45-0.22+i*0.20),dark_mat)
+
+    # Interior: balcão, armário e iluminação simples para dar escala ao ambiente.
+    _box(building,Vector3(minf(2.4,size.x*0.35),0.95,0.62),Vector3(half_x*0.48,0.48,-half_z*0.35),_mat(Color(0.30,0.20,0.13),0.92))
+    _box(building,Vector3(0.9,1.35,0.42),Vector3(-half_x*0.55,0.68,-half_z*0.50),_mat(Color(0.22,0.25,0.26),0.7))
+    _box(building,Vector3(0.12,0.12,0.12),Vector3(0,h-0.12,0),_mat(Color(1.0,0.78,0.43),0.25))
+
+func _house_wall(parent:Node3D,size:Vector3,pos:Vector3,material:Material)->void:
+    var body:=StaticBody3D.new()
+    body.position=pos
+    parent.add_child(body)
+    _box(body,size,Vector3.ZERO,material)
+    var collision:=CollisionShape3D.new()
+    var shape:=BoxShape3D.new()
+    shape.size=size
+    collision.shape=shape
+    body.add_child(collision)
+
 func _tree(parent:Node,pos:Vector3)->void:
     _box(parent,Vector3(0.55,2.2,0.55),pos+Vector3(0,1.1,0),_mat(Color(0.28,0.16,0.08))); var m:=MeshInstance3D.new(); var s:=SphereMesh.new(); s.radius=1.4; s.height=2.3; s.material=_mat(Color(0.08,0.34,0.12)); m.mesh=s; m.position=pos+Vector3(0,2.7,0); parent.add_child(m)
 func _crate(parent:Node,pos:Vector3,side:float)->void:
