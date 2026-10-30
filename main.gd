@@ -537,6 +537,9 @@ func _layout_battle() -> void:
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
     shot_tick=maxf(0,shot_tick-delta); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
+    # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
+    if fire and is_instance_valid(fire) and fire.button_pressed and reload_tick<=0:
+        _shoot()
     if reload_tick>0:
         reload_tick-=delta
         if reload_tick<=0:
