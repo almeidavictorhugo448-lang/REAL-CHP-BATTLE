@@ -1285,22 +1285,35 @@ func _pickup() -> void:
     var k:String=a.get_meta("kind")
     var amount := maxi(1,int(a.get_meta("amount",1)))
     match k:
-                "MUNIÇÃO": reserve_ammo=mini(240,reserve_ammo+amount)
-                "COLETE": shield=minf(90,shield+amount)
-                "KIT": medkits+=amount
-                "GELO": shield=minf(90,shield+amount)
-                "ENERGIA": energy=minf(MAX_ENERGY,energy+amount)
-                "CAIXA":
-                    var contents:Dictionary=a.get_meta("contents",{})
-                    for item in contents:
-                        var count:=int(contents[item])
-                        match String(item):
-                            "MUNIÇÃO": reserve_ammo=min(240,reserve_ammo+count)
-                            "COLETE": shield=minf(90,shield+count*35)
-                            "KIT": medkits+=count
-                            "GELO": shield=minf(90,shield+count*20)
-                            "ENERGIA": energy=minf(MAX_ENERGY,energy+count*35)
-            loot.erase(a); a.queue_free(); _toast("PEGOU "+("SUPRIMENTO AÉREO" if bool(a.get_meta("airdrop",false)) else ("CAIXA DE LOOT" if k=="CAIXA" else k)))
+        "MUNIÇÃO":
+            reserve_ammo = mini(240, reserve_ammo + amount)
+        "COLETE":
+            shield = minf(90, shield + amount)
+        "KIT":
+            medkits += amount
+        "GELO":
+            shield = minf(90, shield + amount)
+        "ENERGIA":
+            energy = minf(MAX_ENERGY, energy + amount)
+        "CAIXA":
+            var contents: Dictionary = a.get_meta("contents", {})
+            for item in contents:
+                var count := int(contents[item])
+                match String(item):
+                    "MUNIÇÃO":
+                        reserve_ammo = mini(240, reserve_ammo + count)
+                    "COLETE":
+                        shield = minf(90, shield + count * 35)
+                    "KIT":
+                        medkits += count
+                    "GELO":
+                        shield = minf(90, shield + count * 20)
+                    "ENERGIA":
+                        energy = minf(MAX_ENERGY, energy + count * 35)
+    var loot_label := "SUPRIMENTO AÉREO" if bool(a.get_meta("airdrop", false)) else ("CAIXA DE LOOT" if k == "CAIXA" else k)
+    loot.erase(a)
+    a.queue_free()
+    _toast("PEGOU " + loot_label)
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
     ammo_text.text="%s • %s  %02d/%02d  |  RES %03d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size(),reserve_ammo]
