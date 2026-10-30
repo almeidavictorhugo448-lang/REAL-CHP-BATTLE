@@ -457,7 +457,7 @@ func _inventory() -> void:
     _txt(ui, "Moedas: %d" % coins, Vector2(28, 62), Vector2(350, 30), 19)
     _txt(ui, "ESCOLHA SUA ARMA", Vector2(28, 101), Vector2(400, 30), 18)
 
-    var width := get_viewport().size.x
+    var width: float = get_viewport().size.x
     for i in range(weapon_catalog.size()):
         var w: String = weapon_catalog[i]
         var bw: float = width / 5.0 - 8.0
