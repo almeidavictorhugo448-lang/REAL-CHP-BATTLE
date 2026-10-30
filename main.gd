@@ -919,8 +919,9 @@ func _crate(parent:Node,pos:Vector3,side:float)->void:
 
 
 func _build_player_armor(parent:Node3D)->void:
+    # Modelo original PUNK: silhueta militar com volumes arredondados e peças sobrepostas.
     var base:Color=chars[selected]["color"]
-    var dark:=base.darkened(0.48)
+    var dark:=base.darkened(0.52)
     var accent:=Color(0.95,0.48,0.10)
     if skin=="Dragão de Fogo":
         accent=Color(1.0,0.12,0.025)
@@ -930,27 +931,103 @@ func _build_player_armor(parent:Node3D)->void:
         accent=Color(1.0,0.72,0.12)
     elif skin=="Neon Roxo":
         accent=Color(0.78,0.18,1.0)
+    var cloth:=_mat(dark,0.88,0.0)
+    var armor:=_mat(base,0.42,0.18)
+    var trim:=_mat(accent,0.32,0.48)
+    var black:=_mat(Color(0.035,0.045,0.055),0.42,0.28)
+    var skin_mat:=_mat(Color(0.52,0.34,0.25),0.9,0.0)
 
-    _box(parent,Vector3(0.72,0.72,0.38),Vector3(0,0.12,0),_mat(base,0.62,0.12))
-    _box(parent,Vector3(0.78,0.16,0.42),Vector3(0,0.40,0),_mat(dark,0.5,0.18))
-    _box(parent,Vector3(0.52,0.12,0.43),Vector3(0,0.05,-0.015),_mat(accent,0.35,0.35))
+    # Tronco, colete balístico e placas frontais.
+    _box(parent,Vector3(0.68,0.68,0.34),Vector3(0,0.10,0),cloth)
+    _box(parent,Vector3(0.78,0.46,0.40),Vector3(0,0.16,-0.025),armor)
+    _box(parent,Vector3(0.60,0.12,0.43),Vector3(0,0.38,-0.025),black)
+    _box(parent,Vector3(0.48,0.20,0.045),Vector3(0,0.16,-0.238),trim)
+    _box(parent,Vector3(0.12,0.28,0.045),Vector3(0,0.10,-0.244),black)
+    _box(parent,Vector3(0.74,0.08,0.38),Vector3(0, -0.22,0),black)
+    _box(parent,Vector3(0.72,0.09,0.40),Vector3(0,-0.30,0),trim)
+    # Bolsos do colete e fivelas.
     for side in [-1.0,1.0]:
-        _box(parent,Vector3(0.30,0.30,0.34),Vector3(side*0.48,0.38,0),_mat(dark,0.55,0.15))
-        _box(parent,Vector3(0.22,0.48,0.24),Vector3(side*0.48,-0.03,0),_mat(base,0.7,0.05))
-        _box(parent,Vector3(0.20,0.18,0.25),Vector3(side*0.48,-0.35,0),_mat(accent,0.4,0.3))
-        _box(parent,Vector3(0.27,0.48,0.30),Vector3(side*0.19,-0.62,0.015),_mat(dark,0.65,0.05))
-        _box(parent,Vector3(0.29,0.18,0.38),Vector3(side*0.19,-0.92,-0.035),_mat(Color(0.08,0.09,0.11),0.45,0.25))
+        _box(parent,Vector3(0.17,0.19,0.10),Vector3(side*0.22,-0.02,-0.25),black)
+        _box(parent,Vector3(0.12,0.035,0.018),Vector3(side*0.22,0.02,-0.307),trim)
+        _box(parent,Vector3(0.055,0.32,0.045),Vector3(side*0.29,0.16,-0.225),black)
 
+    # Ombreiras, braços, cotoveleiras e luvas.
+    for side in [-1.0,1.0]:
+        var shoulder:=MeshInstance3D.new()
+        var shoulder_mesh:=SphereMesh.new()
+        shoulder_mesh.radius=0.19
+        shoulder_mesh.height=0.30
+        shoulder_mesh.radial_segments=12
+        shoulder_mesh.rings=8
+        shoulder_mesh.material=armor
+        shoulder.mesh=shoulder_mesh
+        shoulder.position=Vector3(side*0.47,0.34,0)
+        parent.add_child(shoulder)
+        _box(parent,Vector3(0.22,0.40,0.23),Vector3(side*0.49,0.02,0),cloth)
+        _box(parent,Vector3(0.23,0.13,0.25),Vector3(side*0.49,-0.18,-0.01),trim)
+        _box(parent,Vector3(0.20,0.15,0.22),Vector3(side*0.49,-0.28,0),black)
+        _box(parent,Vector3(0.22,0.13,0.25),Vector3(side*0.49,-0.36,-0.015),black)
+        # Braçadeira e proteção do antebraço.
+        _box(parent,Vector3(0.23,0.20,0.25),Vector3(side*0.49,-0.06,-0.015),armor)
+        _box(parent,Vector3(0.13,0.10,0.27),Vector3(side*0.49,-0.39,-0.02),trim)
+
+    # Cintura, cinto utilitário, pernas articuladas e joelheiras.
+    _box(parent,Vector3(0.62,0.16,0.34),Vector3(0,-0.38,0),black)
+    _box(parent,Vector3(0.13,0.12,0.05),Vector3(0,-0.38,-0.19),trim)
+    for side in [-1.0,1.0]:
+        _box(parent,Vector3(0.27,0.47,0.30),Vector3(side*0.19,-0.66,0.015),cloth)
+        _box(parent,Vector3(0.24,0.17,0.33),Vector3(side*0.19,-0.78,-0.03),armor)
+        _box(parent,Vector3(0.20,0.17,0.30),Vector3(side*0.19,-0.79,-0.205),trim)
+        _box(parent,Vector3(0.29,0.23,0.34),Vector3(side*0.19,-0.98,0.005),black)
+        _box(parent,Vector3(0.31,0.10,0.40),Vector3(side*0.19,-1.12,-0.035),black)
+        _box(parent,Vector3(0.32,0.045,0.41),Vector3(side*0.19,-1.17,-0.035),trim)
+
+    # Mochila compacta nas costas, com costuras e presilhas.
+    _box(parent,Vector3(0.43,0.48,0.20),Vector3(0,0.12,0.24),black)
+    _box(parent,Vector3(0.34,0.25,0.08),Vector3(0,0.20,0.36),armor)
+    _box(parent,Vector3(0.30,0.045,0.025),Vector3(0,0.23,0.412),trim)
+    for side in [-1.0,1.0]:
+        _box(parent,Vector3(0.055,0.40,0.05),Vector3(side*0.20,0.10,0.18),trim)
+
+    # Cabeça, pescoço, capacete, viseira e laterais.
+    var neck:=MeshInstance3D.new()
+    var neck_mesh:=CylinderMesh.new()
+    neck_mesh.top_radius=0.105
+    neck_mesh.bottom_radius=0.12
+    neck_mesh.height=0.16
+    neck_mesh.radial_segments=12
+    neck_mesh.material=skin_mat
+    neck.mesh=neck_mesh
+    neck.position=Vector3(0,0.49,0)
+    parent.add_child(neck)
     var head:=MeshInstance3D.new()
     var hm:=SphereMesh.new()
-    hm.radius=0.23
-    hm.height=0.44
-    hm.material=_mat(Color(0.55,0.36,0.25))
+    hm.radius=0.205
+    hm.height=0.40
+    hm.radial_segments=16
+    hm.rings=10
+    hm.material=skin_mat
     head.mesh=hm
-    head.position=Vector3(0,0.72,0)
+    head.position=Vector3(0,0.70,0)
     parent.add_child(head)
-    _box(parent,Vector3(0.44,0.14,0.40),Vector3(0,0.88,0),_mat(dark,0.4,0.25))
-    _box(parent,Vector3(0.48,0.07,0.43),Vector3(0,0.81,-0.015),_mat(accent,0.3,0.4))
+    var helmet:=MeshInstance3D.new()
+    var helmet_mesh:=SphereMesh.new()
+    helmet_mesh.radius=0.235
+    helmet_mesh.height=0.28
+    helmet_mesh.radial_segments=16
+    helmet_mesh.rings=8
+    helmet_mesh.material=black
+    helmet.mesh=helmet_mesh
+    helmet.position=Vector3(0,0.82,0)
+    helmet.scale=Vector3(1.0,0.72,1.0)
+    parent.add_child(helmet)
+    _box(parent,Vector3(0.43,0.055,0.34),Vector3(0,0.79,-0.035),trim)
+    _box(parent,Vector3(0.32,0.075,0.035),Vector3(0,0.70,-0.195),black)
+    _box(parent,Vector3(0.10,0.025,0.018),Vector3(-0.09,0.70,-0.217),trim)
+    _box(parent,Vector3(0.10,0.025,0.018),Vector3(0.09,0.70,-0.217),trim)
+    # Antena e emblema no peito.
+    _box(parent,Vector3(0.025,0.16,0.025),Vector3(0.31,0.50,0.12),black)
+    _box(parent,Vector3(0.16,0.09,0.025),Vector3(0,0.25,-0.27),trim)
 
 func _build_weapon_model(parent:Node3D)->void:
     var weapon:=Node3D.new()
@@ -994,11 +1071,25 @@ func _build_weapon_model(parent:Node3D)->void:
             body_length=0.62
             barrel_length=0.38
             magazine_height=0.42
-    _box(weapon,Vector3(0.13,0.13,body_length),Vector3(0,0,-0.10),_mat(metal,0.28,0.65))
-    _box(weapon,Vector3(0.16,0.18,body_length*0.46),Vector3(0,0.015,0.12),_mat(accent,0.3,0.45))
-    _box(weapon,Vector3(0.10,magazine_height,0.16),Vector3(0,-0.19,0.10),_mat(metal,0.4,0.5))
-    _box(weapon,Vector3(0.07,0.07,barrel_length),Vector3(0,0.02,-0.62),_mat(metal,0.25,0.8))
-    _box(weapon,Vector3(0.18,0.06,0.18),Vector3(0,0.11,-0.28),_mat(accent,0.25,0.35))
+    var receiver:=_mat(metal,0.28,0.72)
+    var skin_mat:=_mat(accent,0.30,0.5)
+    _box(weapon,Vector3(0.15,0.16,body_length),Vector3(0,0,-0.10),receiver)
+    _box(weapon,Vector3(0.17,0.09,body_length*0.48),Vector3(0,0.10,0.08),skin_mat)
+    _box(weapon,Vector3(0.12,0.19,0.20),Vector3(0,-0.16,0.10),receiver)
+    _box(weapon,Vector3(0.07,magazine_height,0.17),Vector3(0,-0.24,0.02),receiver)
+    _box(weapon,Vector3(0.045,0.045,barrel_length),Vector3(0,0.025,-0.62),receiver)
+    _box(weapon,Vector3(0.12,0.075,0.17),Vector3(0,0.12,-0.28),skin_mat)
+    # Mira, trilho superior, guarda-mão, empunhadura e coronha.
+    _box(weapon,Vector3(0.055,0.045,body_length*0.72),Vector3(0,0.115,-0.12),receiver)
+    _box(weapon,Vector3(0.10,0.055,0.12),Vector3(0,0.20,-0.30),skin_mat)
+    _box(weapon,Vector3(0.08,0.12,0.10),Vector3(0,-0.13,-0.31),receiver)
+    _box(weapon,Vector3(0.09,0.20,0.12),Vector3(0,-0.17,0.29),receiver)
+    _box(weapon,Vector3(0.10,0.07,0.24),Vector3(0,0.02,0.37),receiver)
+    _box(weapon,Vector3(0.09,0.055,0.08),Vector3(0,0.11,0.43),skin_mat)
+    # Cano com ponta reforçada e pequenas ranhuras laterais.
+    _box(weapon,Vector3(0.085,0.085,0.10),Vector3(0,0.025,-0.91),receiver)
+    for side in [-1.0,1.0]:
+        _box(weapon,Vector3(0.018,0.07,0.30),Vector3(side*0.085,0.015,-0.18),skin_mat)
 
 func _player() -> void:
     player=CharacterBody3D.new(); player.name="Player"; player.position=Vector3(0,1,16); add_child(player)
