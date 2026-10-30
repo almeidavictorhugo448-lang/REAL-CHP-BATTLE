@@ -18,7 +18,7 @@ var wardrobe_categories := ["Conjuntos","Cabeças","Máscaras","Peitorais","Cal�
 var royale_tab := "Destaques"
 var royale_items := ["Guardião Carmesim","Anjo Cósmico","Lenda Neon","Dragão Abissal","UMP Tempestade","XM8 Prisma","Emote Vitória Suprema"]
 
-# Arsenal REAL CHP BATTLE
+# Arsenal PUNK
 var active_weapon := "UMP"
 var weapon_damage := {"UMP":28.0,"XM8":30.0,"Águia do Deserto":48.0,"M1014":22.0,"MP40":19.0}
 var weapon_cadence := {"UMP":0.13,"XM8":0.15,"Águia do Deserto":0.38,"M1014":0.48,"MP40":0.075}
@@ -294,7 +294,7 @@ func _lobby() -> void:
     var left := center - button_width * 0.5
     var logo_size := minf(150.0, width * 0.34)
     var logo := TextureRect.new()
-    logo.texture = load("res://assets/real_chapero.png")
+    logo.texture = load("res://assets/punk_logo.svg")
     logo.position = Vector2(center - logo_size * 0.5, 8)
     logo.size = Vector2(logo_size, logo_size)
     logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
