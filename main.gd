@@ -573,7 +573,10 @@ func _move(delta:float) -> void:
     if Input.is_action_pressed("move_right"): input.x+=1
     if Input.is_action_pressed("move_forward"): input.y-=1
     if Input.is_action_pressed("move_back"): input.y+=1
-    if joy_id!=-1: input=(joy_pos-joy_start).limit_length(58)/58
+    if joy_id!=-1:
+        var stick=(joy_pos-joy_start).limit_length(58)/58
+        if stick.length()<0.13: stick=Vector2.ZERO
+        input=stick
     var f:Vector3=-player.global_transform.basis.z; var r:Vector3=player.global_transform.basis.x; var d:=r*input.x+f*(-input.y); if d.length()>1: d=d.normalized()
     var sp:=6.3; if selected=="Danilo" and ability_tick>0: sp=9.2
     player.velocity.x=d.x*sp; player.velocity.z=d.z*sp
@@ -621,7 +624,13 @@ func _unhandled_input(e:InputEvent) -> void:
         elif e.index==look_id: _look(e.relative)
 
 func _look(r:Vector2) -> void:
-    yaw-=r.x*0.004; pitch=clampf(pitch-r.y*0.003,-0.9,0.35); player.rotation.y=yaw; camera.rotation.x=pitch
+    if not player or not camera: return
+    # Sensibilidade proporcional à escala da tela, com limite vertical para não inverter a câmera.
+    var scale_factor=clampf(get_viewport().get_visible_rect().size.y/720.0,0.75,1.35)
+    yaw-=r.x*0.0036*scale_factor
+    pitch=clampf(pitch-r.y*0.0030*scale_factor,-0.82,0.28)
+    player.rotation.y=yaw
+    camera.rotation.x=pitch
 
 func _shoot() -> void:
     if shot_tick>0 or reload_tick>0 or match_done: return
