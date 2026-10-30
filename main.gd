@@ -593,7 +593,7 @@ func _layout_battle() -> void:
 
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
-    shot_tick=maxf(0,shot_tick-delta); recoil_kick=maxf(0,recoil_kick-delta*0.045); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
+    shot_tick=maxf(0,shot_tick-delta); recoil_kick=maxf(0,recoil_kick-delta*0.045); camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
     if fire_held and reload_tick<=0:
         _shoot()
@@ -680,7 +680,7 @@ func _look(r:Vector2) -> void:
     yaw-=r.x*0.0036*scale_factor
     pitch=clampf(pitch-r.y*0.0030*scale_factor,-0.82,0.28)
     player.rotation.y=yaw
-    camera.rotation.x=pitch
+    camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
 
 func _shoot() -> void:
     if shot_tick>0 or reload_tick>0 or match_done: return
@@ -695,8 +695,7 @@ func _shoot() -> void:
         "MP40": kick=0.008
         "XM8": kick=0.010
     recoil_kick=minf(0.12,recoil_kick+kick)
-    pitch=clampf(pitch+kick,-0.82,0.28)
-    camera.rotation.x=pitch
+    camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
     ammo-=1
     var origin:=camera.global_position
     var direction:Vector3=-camera.global_transform.basis.z
