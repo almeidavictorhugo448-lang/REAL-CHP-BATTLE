@@ -712,8 +712,8 @@ func _build_map() -> void:
     # Vegetação e cobertura em áreas rurais, sem bloquear os centros das cidades.
     for i in range(360):
         var pos:=Vector3(randf_range(-202,202),0,randf_range(-202,202))
-        var near_road:=abs(pos.x)<10.0 or abs(pos.z)<10.0
-        var near_town:=false
+        var near_road:bool = abs(pos.x)<10.0 or abs(pos.z)<10.0
+        var near_town:bool = false
         for town in towns:
             var c:Vector2=town["pos"]
             if Vector2(pos.x,pos.z).distance_to(c)<25.0:
