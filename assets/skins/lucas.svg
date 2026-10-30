@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="640" viewBox="0 0 512 640">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06262F"/><stop offset="1" stop-color="#080D18"/></linearGradient>
+ <linearGradient id="armor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#19D9E8"/><stop offset="1" stop-color="#06262F"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#19D9E8" stop-opacity=".48"/><stop offset="1" stop-color="#19D9E8" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="512" height="640" rx="28" fill="url(#bg)"/>
+<circle cx="256" cy="280" r="245" fill="url(#glow)"/>
+<path d="M0 480L512 180M0 560L512 260M0 640L512 340" stroke="#19D9E8" stroke-opacity=".14" stroke-width="3"/>
+<path d="M80 80H190M322 80H432M80 560H190M322 560H432" stroke="#19D9E8" stroke-width="4" opacity=".8"/>
+<ellipse cx="256" cy="548" rx="142" ry="23" fill="#02050B" opacity=".8"/>
+<!-- pernas e botas -->
+<path d="M190 365L244 365L230 500L208 530L158 530L170 500Z" fill="#111B2A" stroke="#19D9E8" stroke-width="5"/>
+<path d="M268 365L322 365L342 500L354 530L304 530L282 500Z" fill="#111B2A" stroke="#19D9E8" stroke-width="5"/>
+<path d="M160 515H222L218 552H142Z M300 515H364L370 552H292Z" fill="#263447" stroke="#19D9E8" stroke-width="5"/>
+<path d="M177 400L235 400L229 430L172 430ZM278 400L336 400L340 430L283 430Z" fill="#19D9E8" opacity=".85"/>
+<!-- braços -->
+<path d="M170 205L112 238L132 368L178 350L202 250ZM342 205L400 238L380 368L334 350L310 250Z" fill="#142236" stroke="#19D9E8" stroke-width="7"/>
+<path d="M111 225L167 196L190 240L133 270ZM345 196L401 225L379 270L322 240Z" fill="url(#armor)" stroke="#EAF5FF" stroke-opacity=".4" stroke-width="4"/>
+<!-- torso blindado -->
+<path d="M178 178L222 150H290L334 178L355 348L312 390H200L157 348Z" fill="#172438" stroke="#19D9E8" stroke-width="8"/>
+<path d="M190 195L225 174H287L322 195L332 330L298 360H214L180 330Z" fill="url(#armor)"/>
+<path d="M207 213L256 242L305 213L294 310L256 340L218 310Z" fill="#101A29" stroke="#19D9E8" stroke-width="5"/>
+<path d="M220 260H292L282 280H230Z" fill="#19D9E8"/>
+<path d="M246 245L256 268L266 245L256 300Z" fill="#F4F7FF" opacity=".9"/>
+<!-- cabeça e capacete -->
+<path d="M204 98L224 72H288L308 98L300 174L256 194L212 174Z" fill="#B77D63" stroke="#19D9E8" stroke-width="7"/>
+<path d="M190 111L208 66L256 48L304 66L322 111L299 129L286 96H226L213 129Z" fill="#111C2D" stroke="#19D9E8" stroke-width="8"/>
+<path d="M211 122H301L291 150H221Z" fill="#06101D" stroke="#19D9E8" stroke-width="5"/>
+<path d="M224 132H247M265 132H288" stroke="#19D9E8" stroke-width="8" stroke-linecap="round"/>
+<!-- arma lateral -->
+<path d="M365 255L402 242L430 325L392 339Z" fill="#101722" stroke="#8293A8" stroke-width="5"/>
+<path d="M379 251L405 242L414 269L388 278Z" fill="#19D9E8"/>
+<path d="M397 328L422 319L442 376L414 385Z" fill="#263447"/>
+<!-- emblema -->
+<path d="M256 286L278 307L256 328L234 307Z" fill="#19D9E8" stroke="#F6F8FF" stroke-width="3"/>
+<text x="256" y="600" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" font-weight="900" letter-spacing="5" fill="#FFFFFF">LUCAS</text>
+<text x="256" y="625" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" letter-spacing="4" fill="#19D9E8">PULSO • PUNK CHARACTER</text>
+</svg>
