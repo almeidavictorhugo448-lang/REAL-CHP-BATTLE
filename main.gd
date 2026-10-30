@@ -854,6 +854,12 @@ func _layout_battle() -> void:
         ability.position.x=maxf(s.x*0.54, s.x-292)
         aim.position.x=maxf(s.x*0.68, s.x-218)
 
+func _abandon_match() -> void:
+    if mode=="battle" and not match_done:
+        if match_phase=="airborne" or match_phase=="landed":
+            _end(false)
+    _lobby()
+
 func _toggle_pause() -> void:
     if mode!="battle" or match_done:
         return
@@ -869,7 +875,7 @@ func _toggle_pause() -> void:
         var resume:=_btn(pause_panel,"CONTINUAR",Vector2(45,100),Vector2(250,52),Color(0.08,0.48,0.34))
         resume.pressed.connect(_toggle_pause)
         var quit:=_btn(pause_panel,"SAIR PARA O LOBBY",Vector2(45,170),Vector2(250,52),Color(0.45,0.12,0.12))
-        quit.pressed.connect(_lobby)
+        quit.pressed.connect(_abandon_match)
     else:
         if is_instance_valid(pause_panel):
             pause_panel.queue_free()
