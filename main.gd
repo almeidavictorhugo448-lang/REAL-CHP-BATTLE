@@ -50,6 +50,7 @@ var hp := MAX_HP
 var shield := 0.0
 var energy := MAX_ENERGY
 var ammo := MAG
+var reserve_ammo := 120
 var kills := 0
 var coins := 250
 var time_left := START_TIME
@@ -576,7 +577,10 @@ func _physics_process(delta:float) -> void:
     if reload_tick>0:
         reload_tick-=delta
         if reload_tick<=0:
-            ammo=_mag_size()
+            var needed:=_mag_size()-ammo
+            var loaded:=mini(needed,reserve_ammo)
+            ammo+=loaded
+            reserve_ammo-=loaded
     if zone_tick>12:
         zone_tick=0
         zone=maxf(18,zone-1.6)
@@ -693,7 +697,7 @@ func _switch_weapon() -> void:
     _toast("ARMA: "+active_weapon)
 
 func _reload() -> void:
-    if reload_tick<=0 and ammo<_mag_size(): reload_tick=float(weapon_reload.get(active_weapon,1.5)); _toast("RECARREGANDO "+active_weapon+"...")
+    if reload_tick<=0 and ammo<_mag_size() and reserve_ammo>0: reload_tick=float(weapon_reload.get(active_weapon,1.5)); _toast("RECARREGANDO "+active_weapon+"...")
 func _medkit() -> void:
     if medkits>0 and hp<MAX_HP: medkits-=1; hp=minf(MAX_HP,hp+50); _toast("KIT MÉDICO +50")
 func _ability() -> void:
@@ -721,7 +725,7 @@ func _pickup() -> void:
         if player.global_position.distance_to(a.global_position)<1.7:
             var k:String=a.get_meta("kind")
             match k:
-                "MUNIÇÃO": ammo=min(_mag_size(),ammo+15)
+                "MUNIÇÃO": reserve_ammo=min(240,reserve_ammo+30)
                 "COLETE": shield=minf(70,shield+35)
                 "KIT": medkits+=1
                 "GELO": shield=minf(90,shield+20)
@@ -729,7 +733,7 @@ func _pickup() -> void:
             loot.erase(a); a.queue_free(); _toast("PEGOU "+k)
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
-    ammo_text.text="%s • %s  %02d / %02d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size()]
+    ammo_text.text="%s • %s  %02d/%02d  |  RES %03d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size(),reserve_ammo]
     top_text.text="RIVAIS %02d   |   TEMPO %03d"%[bots.size(),int(maxf(0,time_left))]
     zone_text.text="ZONA %.0fm"%zone
     ability.text="DRAGÃO %s"%(["PRONTO" if ability_cd<=0 else "%ds"%int(ceil(ability_cd))][0])
