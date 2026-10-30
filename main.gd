@@ -54,6 +54,9 @@ var energy := MAX_ENERGY
 var ammo := MAG
 var reserve_ammo := 120
 var kills := 0
+var matches_played := 0
+var wins := 0
+var losses := 0
 var coins := 250
 var time_left := START_TIME
 var zone := MAP
@@ -129,6 +132,9 @@ func _load_profile() -> void:
     if config.load("user://punk_profile.cfg") != OK:
         return
     coins = maxi(0, int(config.get_value("profile", "coins", coins)))
+    matches_played = maxi(0, int(config.get_value("profile", "matches_played", matches_played)))
+    wins = maxi(0, int(config.get_value("profile", "wins", wins)))
+    losses = maxi(0, int(config.get_value("profile", "losses", losses)))
     var saved_character := String(config.get_value("profile", "selected", selected))
     if chars.has(saved_character):
         selected = saved_character
@@ -157,6 +163,9 @@ func _load_profile() -> void:
 func _save_profile() -> void:
     var config := ConfigFile.new()
     config.set_value("profile", "coins", coins)
+    config.set_value("profile", "matches_played", matches_played)
+    config.set_value("profile", "wins", wins)
+    config.set_value("profile", "losses", losses)
     config.set_value("profile", "selected", selected)
     config.set_value("profile", "skin", skin)
     config.set_value("profile", "active_weapon", active_weapon)
@@ -298,7 +307,7 @@ func _lobby() -> void:
     y += main_h + gap
     var settings := _btn(ui, "⚙  CONFIGURAÇÕES", Vector2(left, y), Vector2(button_width, main_h), Color(0.18, 0.21, 0.25))
     settings.pressed.connect(_settings)
-    var foot := _txt(ui, "PUNK V1     |     🪙 %d" % coins, Vector2(0, height - 30), Vector2(width, 24), 13)
+    var foot := _txt(ui, "PUNK V1  |  🪙 %d  |  PARTIDAS %d  V %d  D %d" % [coins,matches_played,wins,losses], Vector2(0, height - 30), Vector2(width, 24), 13)
     foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _wardrobe() -> void:
@@ -1013,7 +1022,14 @@ func _toast(t:String)->void:
     tw.tween_interval(1.0)
     tw.tween_property(toast, "modulate:a", 0.0, 0.6)
 func _end(win:bool)->void:
-    match_done=true; if win: coins+=100
+    if match_done: return
+    match_done=true
+    matches_played+=1
+    if win:
+        wins+=1
+        coins+=100
+    else:
+        losses+=1
     _save_profile()
     var p:=Panel.new(); p.position=Vector2(get_viewport().size.x/2-190,get_viewport().size.y/2-145); p.size=Vector2(380,290); p.add_theme_stylebox_override("panel",_style(Color(0.015,0.03,0.05,0.98),Color(0.30,0.82,0.70),20)); battle_ui.add_child(p)
     var t:=_txt(p,"VITÓRIA!" if win else "ELIMINADO",Vector2(0,35),Vector2(380,50),30); t.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
