@@ -508,10 +508,30 @@ func _build_weapon_model(parent:Node3D)->void:
         "Águia do Deserto": accent=accent.lerp(Color(0.8,0.72,0.5),0.35)
         "M1014": accent=accent.lerp(Color(0.65,0.3,0.12),0.35)
         "MP40": accent=accent.lerp(Color(0.35,0.55,0.9),0.35)
-    _box(weapon,Vector3(0.13,0.13,0.78),Vector3(0,0,-0.10),_mat(metal,0.28,0.65))
-    _box(weapon,Vector3(0.16,0.18,0.36),Vector3(0,0.015,0.12),_mat(accent,0.3,0.45))
-    _box(weapon,Vector3(0.10,0.28,0.16),Vector3(0,-0.19,0.10),_mat(metal,0.4,0.5))
-    _box(weapon,Vector3(0.07,0.07,0.48),Vector3(0,0.02,-0.62),_mat(metal,0.25,0.8))
+    var body_length:=0.78
+    var barrel_length:=0.48
+    var magazine_height:=0.28
+    match active_weapon:
+        "XM8":
+            body_length=0.92
+            barrel_length=0.62
+            magazine_height=0.34
+        "Águia do Deserto":
+            body_length=0.48
+            barrel_length=0.28
+            magazine_height=0.18
+        "M1014":
+            body_length=1.05
+            barrel_length=0.78
+            magazine_height=0.20
+        "MP40":
+            body_length=0.62
+            barrel_length=0.38
+            magazine_height=0.42
+    _box(weapon,Vector3(0.13,0.13,body_length),Vector3(0,0,-0.10),_mat(metal,0.28,0.65))
+    _box(weapon,Vector3(0.16,0.18,body_length*0.46),Vector3(0,0.015,0.12),_mat(accent,0.3,0.45))
+    _box(weapon,Vector3(0.10,magazine_height,0.16),Vector3(0,-0.19,0.10),_mat(metal,0.4,0.5))
+    _box(weapon,Vector3(0.07,0.07,barrel_length),Vector3(0,0.02,-0.62),_mat(metal,0.25,0.8))
     _box(weapon,Vector3(0.18,0.06,0.18),Vector3(0,0.11,-0.28),_mat(accent,0.25,0.35))
 
 func _player() -> void:
