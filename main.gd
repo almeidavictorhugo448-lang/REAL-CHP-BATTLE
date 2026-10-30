@@ -720,7 +720,11 @@ func _switch_weapon() -> void:
     _toast("ARMA: "+active_weapon)
 
 func _reload() -> void:
-    if reload_tick<=0 and ammo<_mag_size() and reserve_ammo>0: reload_tick=float(weapon_reload.get(active_weapon,1.5)); _toast("RECARREGANDO "+active_weapon+"...")
+    if reload_tick>0 or ammo>=_mag_size() or reserve_ammo<=0 or match_done:
+        return
+    fire_held=false
+    reload_tick=float(weapon_reload.get(active_weapon,1.5))
+    _toast("RECARREGANDO "+active_weapon+"...")
 func _medkit() -> void:
     if medkits>0 and hp<MAX_HP: medkits-=1; hp=minf(MAX_HP,hp+50); _toast("KIT MÉDICO +50")
 func _ability() -> void:
