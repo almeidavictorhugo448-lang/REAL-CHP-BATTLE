@@ -1,6 +1,6 @@
 [application]
 config/name="PUNK"
-run/main_scene="res://intro.tscn"
+run/main_scene="res://main.tscn"
 config/icon="res://assets/punk_logo.svg"
 boot_splash/show_image=false
 boot_splash/bg_color=Color(0.015,0.02,0.04,1)
