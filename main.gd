@@ -47,7 +47,6 @@ var bots: Array[CharacterBody3D] = []
 var bot_hp: Dictionary = {}
 var bot_t: Dictionary = {}
 var loot: Array[Area3D] = []
-var loot_clock := 0.0
 var hp := MAX_HP
 var shield := 0.0
 var energy := MAX_ENERGY
@@ -558,10 +557,34 @@ func _bots() -> void:
 
 func _loot() -> void:
     var kinds=["MUNIÇÃO","COLETE","KIT","GELO","ENERGIA"]
-    for i in range(18):
-        var a:=Area3D.new(); a.name="Loot_%02d"%i; a.position=Vector3(randf_range(-43,43),0.55,randf_range(-43,43)); a.set_meta("kind",kinds[i%kinds.size()]); add_child(a)
-        var c:=CollisionShape3D.new(); var s:=SphereShape3D.new(); s.radius=1.2; c.shape=s; a.add_child(c)
-        var m:=MeshInstance3D.new(); var sm:=SphereMesh.new(); sm.radius=0.3; sm.height=0.6; sm.material=_mat([Color(0.95,0.75,0.10),Color(0.20,0.55,0.95),Color(0.15,0.80,0.35),Color(0.20,0.90,0.90),Color(0.70,0.25,0.95)][i%5],0.35,0.15); m.mesh=sm; a.add_child(m); loot.append(a)
+    # Pontos fixos de saque: dentro das construções e junto a coberturas.
+    var spots=[
+        Vector3(-34,0.0,-31),Vector3(-30,0.0,-27),Vector3(-25,0.0,-32),
+        Vector3(29,0.0,-34),Vector3(34,0.0,-29),Vector3(25,0.0,-27),
+        Vector3(-36,0.0,22),Vector3(-31,0.0,27),Vector3(-27,0.0,21),
+        Vector3(30,0.0,25),Vector3(35,0.0,30),Vector3(25,0.0,34),
+        Vector3(-8,0.0,-8),Vector3(8,0.0,8),Vector3(0,0.0,34),
+        Vector3(0,0.0,-37),Vector3(40,0.0,0),Vector3(-40,0.0,0)
+    ]
+    for i in range(spots.size()):
+        var a:=Area3D.new()
+        a.name="Loot_%02d"%i
+        a.position=spots[i]+Vector3(0,0.32,0)
+        a.set_meta("kind",kinds[i%kinds.size()])
+        add_child(a)
+        var c:=CollisionShape3D.new()
+        var shape:=SphereShape3D.new()
+        shape.radius=1.2
+        c.shape=shape
+        a.add_child(c)
+        var m:=MeshInstance3D.new()
+        var sm:=BoxMesh.new()
+        sm.size=Vector3(0.48,0.18,0.32)
+        sm.material=_mat([Color(0.95,0.75,0.10),Color(0.20,0.55,0.95),Color(0.15,0.80,0.35),Color(0.20,0.90,0.90),Color(0.70,0.25,0.95)][i%5],0.35,0.15)
+        m.mesh=sm
+        m.position.y=-0.12
+        a.add_child(m)
+        loot.append(a)
 
 func _battle_ui() -> void:
     battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui.add_child(battle_ui)
@@ -608,12 +631,6 @@ func _physics_process(delta:float) -> void:
     ability_tick=maxf(0,ability_tick-delta)
     time_left-=delta
     zone_tick+=delta
-    loot_clock+=delta
-    for i in range(loot.size()):
-        var drop:=loot[i]
-        if is_instance_valid(drop):
-            drop.position.y=0.55+sin(loot_clock*2.2+float(i))*0.12
-            drop.rotation.y+=delta*1.4
     energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
     if fire_held and reload_tick<=0:
