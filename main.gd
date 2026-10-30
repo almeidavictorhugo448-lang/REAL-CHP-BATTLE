@@ -505,7 +505,25 @@ func _set_sensitivity(value:float,name:String,label:Label) -> void:
     _save_settings()
 
 func _start() -> void:
+    # Cada partida começa com estado limpo; perfil e moedas ficam persistidos.
     fire_held=false
+    aim_held=false
+    match_done=false
+    kills=0
+    hp=MAX_HP
+    shield=0
+    energy=0
+    medkits=3
+    reserve_ammo=120
+    ammo=_mag_size()
+    time_left=START_TIME
+    zone=MAP
+    zone_tick=0.0
+    shot_tick=0.0
+    reload_tick=0.0
+    reload_total=0.0
+    ability_tick=0.0
+    ability_cd=0.0
     mode = "battle"
     _reset_ui()
     _clear_world()
