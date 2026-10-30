@@ -80,7 +80,6 @@ var ammo_text: Label
 var reload_text: Label
 var hit_marker: Label
 var hit_marker_tick := 0.0
-var reload_text: Label
 var top_text: Label
 var zone_text: Label
 var toast: Label
@@ -581,7 +580,7 @@ func _battle_ui() -> void:
 func _layout_battle() -> void:
     if not battle_ui: return
     var s:=get_viewport().get_visible_rect().size
-    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42); reload_text.position=Vector2(s.x/2-130,s.y*0.68); reload_text.position=Vector2(s.x/2-130,s.y*0.68)
+    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42); reload_text.position=Vector2(s.x/2-130,s.y*0.68)
     joy_base.position=Vector2(24,s.y-164); joy_knob.position=joy_base.position+Vector2(37,37)
     fire.position=Vector2(s.x-126,s.y-148)
     switch_weapon.position=Vector2(s.x-250,s.y-218)
@@ -598,7 +597,17 @@ func _layout_battle() -> void:
 
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
-    shot_tick=maxf(0,shot_tick-delta); hit_marker_tick=maxf(0,hit_marker_tick-delta); if hit_marker_tick<=0: hit_marker.visible=false; recoil_kick=maxf(0,recoil_kick-delta*0.045); camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
+    shot_tick=maxf(0,shot_tick-delta)
+    hit_marker_tick=maxf(0,hit_marker_tick-delta)
+    if hit_marker_tick<=0:
+        hit_marker.visible=false
+    recoil_kick=maxf(0,recoil_kick-delta*0.045)
+    camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
+    ability_cd=maxf(0,ability_cd-delta)
+    ability_tick=maxf(0,ability_tick-delta)
+    time_left-=delta
+    zone_tick+=delta
+    energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
     if fire_held and reload_tick<=0:
         _shoot()
