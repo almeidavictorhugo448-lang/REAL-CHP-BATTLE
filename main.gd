@@ -957,6 +957,8 @@ func _shoot() -> void:
         bot_t.erase(id)
         target.queue_free()
         _toast("ELIMINAÇÃO +10 🪙")
+        if bots.is_empty() and not match_done:
+            _end(true)
 
 func _refresh_weapon_model() -> void:
     if not is_instance_valid(player): return
