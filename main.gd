@@ -578,10 +578,22 @@ func _jump_from_aircraft() -> void:
     var cabin=get_node_or_null("AircraftCabin")
     if cabin: cabin.queue_free()
     player.global_position=Vector3(randf_range(-8.0,8.0),34.0,randf_range(-8.0,8.0))
-    player.velocity=Vector3(0,-2.0,0)
+    player.velocity=Vector3(0,-1.0,0)
+    var canopy:=MeshInstance3D.new()
+    canopy.name="ParachuteCanopy"
+    var canopy_mesh:=SphereMesh.new()
+    canopy_mesh.radius=2.1
+    canopy_mesh.height=1.25
+    canopy_mesh.radial_segments=20
+    canopy_mesh.rings=8
+    canopy.mesh=canopy_mesh
+    canopy.position=Vector3(0,4.0,0)
+    canopy.scale=Vector3(1.0,0.38,1.0)
+    canopy.material_override=_mat(Color(0.92,0.18,0.12))
+    player.add_child(canopy)
     for control in [fire,switch_weapon,reload,ability,medkit,aim,joy_base,joy_knob]:
-        control.visible=true
-    _toast("SALTO! PROCURE EQUIPAMENTOS E SOBREVIVA")
+        control.visible=false
+    _toast("PARAQUEDAS ABERTO — DESCENDO!")
 
 func _clear_world() -> void:
     if player and is_instance_valid(player): player.queue_free()
@@ -826,6 +838,21 @@ func _physics_process(delta:float) -> void:
             if is_instance_valid(jump_button): jump_button.disabled=false
         return
     if match_phase=="ready_to_jump":
+        return
+    if match_phase=="airborne":
+        player.velocity.x=0.0
+        player.velocity.z=0.0
+        player.velocity.y=-4.2
+        player.move_and_slide()
+        if player.is_on_floor() or player.global_position.y<=1.05:
+            player.global_position.y=1.0
+            player.velocity=Vector3.ZERO
+            match_phase="landed"
+            var canopy=player.get_node_or_null("ParachuteCanopy")
+            if canopy: canopy.queue_free()
+            for control in [fire,switch_weapon,reload,ability,medkit,aim,joy_base,joy_knob]:
+                control.visible=true
+            _toast("POUSO CONCLUÍDO — BOA PARTIDA!")
         return
     shot_tick=maxf(0,shot_tick-delta)
     hit_marker_tick=maxf(0,hit_marker_tick-delta)
