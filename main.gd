@@ -960,7 +960,7 @@ func _house(parent:Node,pos:Vector3,size:Vector3,wall:Color,roof:Color)->void:
 
     # Janelas laterais da fachada com peitoril e molduras metálicas.
     for side in [-1.0,1.0]:
-        var wx:=side*(door_w*0.5+side_w*0.5)
+        var wx:float=side*(door_w*0.5+side_w*0.5)
         var ww:=minf(1.65,side_w*0.48)
         var wy:=h*0.57
         _box(building,Vector3(ww+0.28,1.05,0.12),Vector3(wx,wy,half_z+0.20),trim_mat)
@@ -970,7 +970,7 @@ func _house(parent:Node,pos:Vector3,size:Vector3,wall:Color,roof:Color)->void:
 
     # Janelas menores nas laterais e detalhes de fachada.
     for side in [-1.0,1.0]:
-        var sx:=side*(half_x+0.19)
+        var sx:float=side*(half_x+0.19)
         _box(building,Vector3(0.05,0.92,1.35),Vector3(sx,h*0.58,0),glass_mat)
         _box(building,Vector3(0.12,1.08,0.12),Vector3(sx*1.015,h*0.58,-0.72),trim_mat)
         _box(building,Vector3(0.12,1.08,0.12),Vector3(sx*1.015,h*0.58,0.72),trim_mat)
