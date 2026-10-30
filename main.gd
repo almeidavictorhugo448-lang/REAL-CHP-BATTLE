@@ -249,13 +249,23 @@ func _ensure_lobby_camera() -> void:
 func _world_lighting() -> void:
     var e := WorldEnvironment.new()
     var env := Environment.new()
-    # Fundo de cor sólida: fallback mais previsível em aparelhos Android com GPU limitada.
-    env.background_mode = Environment.BG_COLOR
-    env.background_color = Color(0.035, 0.065, 0.085)
-    env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-    env.ambient_light_color = Color(0.62, 0.70, 0.76)
-    env.ambient_light_energy = 0.9
-    env.fog_enabled = false
+    # Céu atmosférico leve: substitui o fundo chapado sem depender de texturas externas.
+    var sky := Sky.new()
+    var sky_material := ProceduralSkyMaterial.new()
+    sky_material.sky_top_color = Color(0.12, 0.30, 0.48)
+    sky_material.sky_horizon_color = Color(0.72, 0.78, 0.76)
+    sky_material.ground_bottom_color = Color(0.12, 0.18, 0.16)
+    sky_material.ground_horizon_color = Color(0.48, 0.55, 0.48)
+    sky_material.sun_angle_max = 18.0
+    sky_material.sun_curve = 0.12
+    sky.sky_material = sky_material
+    env.background_mode = Environment.BG_SKY
+    env.sky = sky
+    env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+    env.ambient_light_energy = 0.85
+    env.fog_enabled = true
+    env.fog_light_color = Color(0.62, 0.72, 0.76)
+    env.fog_density = 0.0018
     e.name = "WorldEnvironment"
     e.environment = env
     graphics_environment = env
@@ -872,6 +882,41 @@ func _build_map() -> void:
     var map:=Node3D.new()
     map.name="Map"
     add_child(map)
+
+    # Oceano ao redor da ilha para dar profundidade ao horizonte.
+    var ocean := MeshInstance3D.new()
+    ocean.name = "Ocean"
+    var ocean_mesh := PlaneMesh.new()
+    ocean_mesh.size = Vector2(900, 900)
+    var ocean_material := _mat(Color(0.035, 0.20, 0.29), 0.22, 0.18)
+    ocean_material.metallic = 0.12
+    ocean_material.roughness = 0.24
+    ocean_mesh.material = ocean_material
+    ocean.mesh = ocean_mesh
+    ocean.position.y = -1.15
+    map.add_child(ocean)
+
+    # Faixa de areia costeira em quatro lados da ilha.
+    var beach_material := _mat(Color(0.62, 0.53, 0.35), 0.96)
+    _box(map, Vector3(420, 0.08, 7), Vector3(0, 0.015, -205), beach_material)
+    _box(map, Vector3(420, 0.08, 7), Vector3(0, 0.015, 205), beach_material)
+    _box(map, Vector3(7, 0.08, 406), Vector3(-205, 0.015, 0), beach_material)
+    _box(map, Vector3(7, 0.08, 406), Vector3(205, 0.015, 0), beach_material)
+
+    # Rochas costeiras de baixa contagem de polígonos.
+    for i in range(28):
+        var angle := TAU * float(i) / 28.0
+        var rock := MeshInstance3D.new()
+        var rock_mesh := SphereMesh.new()
+        rock_mesh.radius = randf_range(2.0, 4.0)
+        rock_mesh.height = randf_range(2.0, 4.5)
+        rock_mesh.radial_segments = 7
+        rock_mesh.rings = 4
+        rock_mesh.material = _mat(Color(0.30, 0.35, 0.34), 1.0)
+        rock.mesh = rock_mesh
+        rock.position = Vector3(cos(angle) * 207.0, 0.4, sin(angle) * 207.0)
+        rock.scale = Vector3(1.4, 0.7, 1.0)
+        map.add_child(rock)
 
     var floor:=StaticBody3D.new()
     floor.name="Terrain"
