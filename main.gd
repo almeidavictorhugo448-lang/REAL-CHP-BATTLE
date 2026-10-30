@@ -1212,115 +1212,235 @@ func _crate(parent:Node,pos:Vector3,side:float)->void:
 
 
 func _build_player_armor(parent:Node3D)->void:
-    # Modelo original PUNK: silhueta militar com volumes arredondados e peças sobrepostas.
+    # Personagem com anatomia arredondada e proporções humanas.
     var base:Color=chars[selected]["color"]
-    var dark:=base.darkened(0.52)
-    var accent:=Color(0.95,0.48,0.10)
-    if skin=="Dragão de Fogo":
-        accent=Color(1.0,0.12,0.025)
-    elif skin=="Gelo Eterno":
-        accent=Color(0.25,0.86,1.0)
-    elif skin=="Ouro Imperial":
-        accent=Color(1.0,0.72,0.12)
-    elif skin=="Neon Roxo":
-        accent=Color(0.78,0.18,1.0)
-    var cloth:=_mat(dark,0.88,0.0)
-    var armor:=_mat(base,0.42,0.18)
-    var trim:=_mat(accent,0.32,0.48)
-    var black:=_mat(Color(0.035,0.045,0.055),0.42,0.28)
-    var skin_mat:=_mat(Color(0.52,0.34,0.25),0.9,0.0)
+    var dark:=base.darkened(0.48)
+    var accent:=Color("#F6C34A")
+    if skin=="Dragão de Fogo": accent=Color("#F0442E")
+    elif skin=="Gelo Eterno": accent=Color("#55DDF5")
+    elif skin=="Ouro Imperial": accent=Color("#F4C34A")
+    elif skin=="Neon Roxo": accent=Color("#B45CFA")
+    var cloth:=_mat(dark,0.92,0.0)
+    var armor:=_mat(base,0.48,0.12)
+    var trim:=_mat(accent,0.34,0.42)
+    var black:=_mat(Color("#17212B"),0.38,0.32)
+    var skin_mat:=_mat(Color("#9B684D"),0.82,0.0)
 
-    # Tronco, colete balístico e placas frontais.
-    _box(parent,Vector3(0.68,0.68,0.34),Vector3(0,0.10,0),cloth)
-    _box(parent,Vector3(0.78,0.46,0.40),Vector3(0,0.16,-0.025),armor)
-    _box(parent,Vector3(0.60,0.12,0.43),Vector3(0,0.38,-0.025),black)
-    _box(parent,Vector3(0.48,0.20,0.045),Vector3(0,0.16,-0.238),trim)
-    _box(parent,Vector3(0.12,0.28,0.045),Vector3(0,0.10,-0.244),black)
-    _box(parent,Vector3(0.74,0.08,0.38),Vector3(0, -0.22,0),black)
-    _box(parent,Vector3(0.72,0.09,0.40),Vector3(0,-0.30,0),trim)
-    # Bolsos do colete e fivelas.
+    # Tronco e colete anatômicos.
+    var torso:=MeshInstance3D.new()
+    var torso_mesh:=CapsuleMesh.new()
+    torso_mesh.radius=0.30
+    torso_mesh.height=0.92
+    torso_mesh.radial_segments=24
+    torso_mesh.rings=12
+    torso_mesh.material=cloth
+    torso.mesh=torso_mesh
+    torso.position=Vector3(0,0.02,0)
+    torso.scale=Vector3(1.08,1.0,0.72)
+    parent.add_child(torso)
+    var chest:=MeshInstance3D.new()
+    var chest_mesh:=SphereMesh.new()
+    chest_mesh.radius=0.39
+    chest_mesh.height=0.72
+    chest_mesh.radial_segments=24
+    chest_mesh.rings=16
+    chest_mesh.material=armor
+    chest.mesh=chest_mesh
+    chest.position=Vector3(0,0.19,-0.015)
+    chest.scale=Vector3(1.0,0.92,0.78)
+    parent.add_child(chest)
+
+    # Placas curvas, bolsos e emblema.
     for side in [-1.0,1.0]:
-        _box(parent,Vector3(0.17,0.19,0.10),Vector3(side*0.22,-0.02,-0.25),black)
-        _box(parent,Vector3(0.12,0.035,0.018),Vector3(side*0.22,0.02,-0.307),trim)
-        _box(parent,Vector3(0.055,0.32,0.045),Vector3(side*0.29,0.16,-0.225),black)
+        var plate:=MeshInstance3D.new()
+        var pm:=SphereMesh.new()
+        pm.radius=0.19
+        pm.height=0.42
+        pm.radial_segments=20
+        pm.rings=12
+        pm.material=black
+        plate.mesh=pm
+        plate.position=Vector3(side*0.15,0.16,-0.285)
+        plate.scale=Vector3(0.9,1.0,0.32)
+        parent.add_child(plate)
+        var pouch:=MeshInstance3D.new()
+        var pouch_mesh:=CapsuleMesh.new()
+        pouch_mesh.radius=0.075
+        pouch_mesh.height=0.22
+        pouch_mesh.radial_segments=16
+        pouch_mesh.material=black
+        pouch.mesh=pouch_mesh
+        pouch.position=Vector3(side*0.25,-0.10,-0.27)
+        pouch.scale=Vector3(1.0,1.0,0.42)
+        parent.add_child(pouch)
+    var badge:=MeshInstance3D.new()
+    var bm:=SphereMesh.new()
+    bm.radius=0.075
+    bm.height=0.11
+    bm.material=trim
+    badge.mesh=bm
+    badge.position=Vector3(0,0.31,-0.31)
+    badge.scale=Vector3(1.0,0.55,0.25)
+    parent.add_child(badge)
 
-    # Ombreiras, braços, cotoveleiras e luvas.
+    # Braços com ombros, bíceps, cotovelos, antebraços e luvas.
     for side in [-1.0,1.0]:
         var shoulder:=MeshInstance3D.new()
-        var shoulder_mesh:=SphereMesh.new()
-        shoulder_mesh.radius=0.19
-        shoulder_mesh.height=0.30
-        shoulder_mesh.radial_segments=12
-        shoulder_mesh.rings=8
-        shoulder_mesh.material=armor
-        shoulder.mesh=shoulder_mesh
-        shoulder.position=Vector3(side*0.47,0.34,0)
+        var sm:=SphereMesh.new()
+        sm.radius=0.205
+        sm.height=0.30
+        sm.radial_segments=20
+        sm.rings=12
+        sm.material=armor
+        shoulder.mesh=sm
+        shoulder.position=Vector3(side*0.43,0.32,0)
         parent.add_child(shoulder)
-        _box(parent,Vector3(0.22,0.40,0.23),Vector3(side*0.49,0.02,0),cloth)
-        _box(parent,Vector3(0.23,0.13,0.25),Vector3(side*0.49,-0.18,-0.01),trim)
-        _box(parent,Vector3(0.20,0.15,0.22),Vector3(side*0.49,-0.28,0),black)
-        _box(parent,Vector3(0.22,0.13,0.25),Vector3(side*0.49,-0.36,-0.015),black)
-        # Braçadeira e proteção do antebraço.
-        _box(parent,Vector3(0.23,0.20,0.25),Vector3(side*0.49,-0.06,-0.015),armor)
-        _box(parent,Vector3(0.13,0.10,0.27),Vector3(side*0.49,-0.39,-0.02),trim)
+        var upper:=MeshInstance3D.new()
+        var um:=CapsuleMesh.new()
+        um.radius=0.125
+        um.height=0.52
+        um.radial_segments=20
+        um.rings=12
+        um.material=cloth
+        upper.mesh=um
+        upper.position=Vector3(side*0.49,0.02,0.015)
+        upper.rotation.z=side*0.10
+        parent.add_child(upper)
+        var elbow:=MeshInstance3D.new()
+        var em:=SphereMesh.new()
+        em.radius=0.13
+        em.height=0.15
+        em.material=black
+        elbow.mesh=em
+        elbow.position=Vector3(side*0.51,-0.22,-0.005)
+        parent.add_child(elbow)
+        var forearm:=MeshInstance3D.new()
+        var fm:=CapsuleMesh.new()
+        fm.radius=0.105
+        fm.height=0.40
+        fm.radial_segments=20
+        fm.rings=12
+        fm.material=armor
+        forearm.mesh=fm
+        forearm.position=Vector3(side*0.52,-0.39,-0.015)
+        parent.add_child(forearm)
+        var glove:=MeshInstance3D.new()
+        var gm:=SphereMesh.new()
+        gm.radius=0.12
+        gm.height=0.15
+        gm.material=black
+        glove.mesh=gm
+        glove.position=Vector3(side*0.52,-0.61,-0.04)
+        parent.add_child(glove)
 
-    # Cintura, cinto utilitário, pernas articuladas e joelheiras.
-    _box(parent,Vector3(0.62,0.16,0.34),Vector3(0,-0.38,0),black)
-    _box(parent,Vector3(0.13,0.12,0.05),Vector3(0,-0.38,-0.19),trim)
-    for side in [-1.0,1.0]:
-        _box(parent,Vector3(0.27,0.47,0.30),Vector3(side*0.19,-0.66,0.015),cloth)
-        _box(parent,Vector3(0.24,0.17,0.33),Vector3(side*0.19,-0.78,-0.03),armor)
-        _box(parent,Vector3(0.20,0.17,0.30),Vector3(side*0.19,-0.79,-0.205),trim)
-        _box(parent,Vector3(0.29,0.23,0.34),Vector3(side*0.19,-0.98,0.005),black)
-        _box(parent,Vector3(0.31,0.10,0.40),Vector3(side*0.19,-1.12,-0.035),black)
-        _box(parent,Vector3(0.32,0.045,0.41),Vector3(side*0.19,-1.17,-0.035),trim)
+        # Coxas, joelheiras, canelas e botas.
+        var thigh:=MeshInstance3D.new()
+        var tm:=CapsuleMesh.new()
+        tm.radius=0.145
+        tm.height=0.60
+        tm.radial_segments=20
+        tm.rings=12
+        tm.material=cloth
+        thigh.mesh=tm
+        thigh.position=Vector3(side*0.18,-0.68,0.015)
+        parent.add_child(thigh)
+        var knee:=MeshInstance3D.new()
+        var km:=SphereMesh.new()
+        km.radius=0.15
+        km.height=0.17
+        km.material=trim
+        knee.mesh=km
+        knee.position=Vector3(side*0.18,-0.89,-0.035)
+        knee.scale=Vector3(1.0,0.7,0.75)
+        parent.add_child(knee)
+        var boot:=MeshInstance3D.new()
+        var boot_mesh:=CapsuleMesh.new()
+        boot_mesh.radius=0.14
+        boot_mesh.height=0.48
+        boot_mesh.radial_segments=20
+        boot_mesh.rings=12
+        boot_mesh.material=black
+        boot.mesh=boot_mesh
+        boot.position=Vector3(side*0.18,-1.08,-0.005)
+        boot.scale=Vector3(1.0,0.72,1.0)
+        parent.add_child(boot)
 
-    # Mochila compacta nas costas, com costuras e presilhas.
-    _box(parent,Vector3(0.43,0.48,0.20),Vector3(0,0.12,0.24),black)
-    _box(parent,Vector3(0.34,0.25,0.08),Vector3(0,0.20,0.36),armor)
-    _box(parent,Vector3(0.30,0.045,0.025),Vector3(0,0.23,0.412),trim)
-    for side in [-1.0,1.0]:
-        _box(parent,Vector3(0.055,0.40,0.05),Vector3(side*0.20,0.10,0.18),trim)
+    # Mochila arredondada.
+    var pack:=MeshInstance3D.new()
+    var pack_mesh:=CapsuleMesh.new()
+    pack_mesh.radius=0.22
+    pack_mesh.height=0.62
+    pack_mesh.radial_segments=20
+    pack_mesh.rings=12
+    pack_mesh.material=black
+    pack.mesh=pack_mesh
+    pack.position=Vector3(0,0.12,0.25)
+    pack.scale=Vector3(0.82,1.0,0.62)
+    parent.add_child(pack)
 
-    # Cabeça, pescoço, capacete, viseira e laterais.
+    # Pescoço, crânio, mandíbula e orelhas.
     var neck:=MeshInstance3D.new()
-    var neck_mesh:=CylinderMesh.new()
-    neck_mesh.top_radius=0.105
-    neck_mesh.bottom_radius=0.12
-    neck_mesh.height=0.16
-    neck_mesh.radial_segments=12
-    neck_mesh.material=skin_mat
-    neck.mesh=neck_mesh
-    neck.position=Vector3(0,0.49,0)
+    var nm:=CylinderMesh.new()
+    nm.top_radius=0.105
+    nm.bottom_radius=0.12
+    nm.height=0.18
+    nm.radial_segments=20
+    nm.material=skin_mat
+    neck.mesh=nm
+    neck.position=Vector3(0,0.51,0)
     parent.add_child(neck)
     var head:=MeshInstance3D.new()
     var hm:=SphereMesh.new()
     hm.radius=0.205
-    hm.height=0.40
-    hm.radial_segments=16
-    hm.rings=10
+    hm.height=0.43
+    hm.radial_segments=24
+    hm.rings=16
     hm.material=skin_mat
     head.mesh=hm
-    head.position=Vector3(0,0.70,0)
+    head.position=Vector3(0,0.72,-0.005)
+    head.scale=Vector3(0.88,1.0,0.90)
     parent.add_child(head)
+    var jaw:=MeshInstance3D.new()
+    var jm:=SphereMesh.new()
+    jm.radius=0.14
+    jm.height=0.17
+    jm.material=skin_mat
+    jaw.mesh=jm
+    jaw.position=Vector3(0,0.62,-0.09)
+    jaw.scale=Vector3(0.9,0.62,0.75)
+    parent.add_child(jaw)
+    for side in [-1.0,1.0]:
+        var ear:=MeshInstance3D.new()
+        var ear_mesh:=SphereMesh.new()
+        ear_mesh.radius=0.052
+        ear_mesh.height=0.085
+        ear_mesh.material=skin_mat
+        ear.mesh=ear_mesh
+        ear.position=Vector3(side*0.18,0.72,-0.005)
+        ear.scale=Vector3(0.65,1.0,0.65)
+        parent.add_child(ear)
+
+    # Capacete curvo e viseira.
     var helmet:=MeshInstance3D.new()
     var helmet_mesh:=SphereMesh.new()
     helmet_mesh.radius=0.235
-    helmet_mesh.height=0.28
-    helmet_mesh.radial_segments=16
-    helmet_mesh.rings=8
+    helmet_mesh.height=0.29
+    helmet_mesh.radial_segments=24
+    helmet_mesh.rings=16
     helmet_mesh.material=black
     helmet.mesh=helmet_mesh
-    helmet.position=Vector3(0,0.82,0)
-    helmet.scale=Vector3(1.0,0.72,1.0)
+    helmet.position=Vector3(0,0.84,0.015)
+    helmet.scale=Vector3(1.04,0.72,1.0)
     parent.add_child(helmet)
-    _box(parent,Vector3(0.43,0.055,0.34),Vector3(0,0.79,-0.035),trim)
-    _box(parent,Vector3(0.32,0.075,0.035),Vector3(0,0.70,-0.195),black)
-    _box(parent,Vector3(0.10,0.025,0.018),Vector3(-0.09,0.70,-0.217),trim)
-    _box(parent,Vector3(0.10,0.025,0.018),Vector3(0.09,0.70,-0.217),trim)
-    # Antena e emblema no peito.
-    _box(parent,Vector3(0.025,0.16,0.025),Vector3(0.31,0.50,0.12),black)
-    _box(parent,Vector3(0.16,0.09,0.025),Vector3(0,0.25,-0.27),trim)
+    var visor:=MeshInstance3D.new()
+    var vm:=SphereMesh.new()
+    vm.radius=0.17
+    vm.height=0.075
+    vm.material=trim
+    visor.mesh=vm
+    visor.position=Vector3(0,0.76,-0.18)
+    visor.scale=Vector3(1.18,0.55,0.25)
+    parent.add_child(visor)
 
 func _build_weapon_model(parent:Node3D)->void:
     var weapon:=Node3D.new()
