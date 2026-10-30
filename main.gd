@@ -303,86 +303,209 @@ func _lobby() -> void:
     mode = "lobby"
     _clear_world()
     _ensure_lobby_camera()
+    _build_lobby_showcase()
     _reset_ui()
-    _bg(Color(0.006, 0.010, 0.018, 1))
     var viewport_size := get_viewport().get_visible_rect().size
     var width := viewport_size.x
     var height := viewport_size.y
-    var center := width * 0.5
-    var button_width := minf(340.0, width - 40.0)
-    var left := center - button_width * 0.5
-    var logo_size := minf(150.0, width * 0.34)
-    var logo := TextureRect.new()
-    logo.texture = load("res://assets/punk_logo.svg")
-    logo.position = Vector2(center - logo_size * 0.5, 8)
-    logo.size = Vector2(logo_size, logo_size)
-    logo.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    logo.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-    ui.add_child(logo)
-    var title_y := logo_size + 2.0
-    var title := _txt(ui, "PUNK", Vector2(0, title_y), Vector2(width, 66), 52)
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_color_override("font_color", Color(0.78, 0.90, 1))
-    var sub := _txt(ui, "V1 • 3D SHOOTER EM DESENVOLVIMENTO", Vector2(0, title_y + 58), Vector2(width, 26), 14)
-    sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    sub.add_theme_color_override("font_color", Color(0.30, 0.95, 0.82))
-    var available := maxf(300.0, height - (title_y + 105.0) - 54.0)
-    var gap := minf(12.0, available * 0.025)
-    var main_h := minf(54.0, (available - gap * 5.0) / 6.0)
-    var y := title_y + 100.0
-    var play := _btn(ui, "▶  JOGAR", Vector2(left, y), Vector2(button_width, main_h), Color(0.08, 0.50, 0.37))
+    _bg(Color(0.025, 0.035, 0.045, 0.88))
+    # Faixa superior de perfil e moedas.
+    var top := Panel.new()
+    top.position = Vector2(0, 0)
+    top.size = Vector2(width, 62)
+    top.add_theme_stylebox_override("panel", _style(Color(0.025,0.035,0.045,0.94), Color(0.55,0.42,0.18), 0))
+    ui.add_child(top)
+    _txt(top, "PUNK", Vector2(24,10), Vector2(170,42), 30).add_theme_color_override("font_color", Color(1.0,0.78,0.30))
+    _txt(top, "JOGADOR  •  " + selected.to_upper(), Vector2(205,17), Vector2(300,30), 17)
+    var currency := _txt(top, "🪙 %d     ♦  0" % coins, Vector2(width-260,16), Vector2(240,32), 19)
+    currency.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+    # Personagem 3D no centro, com laterais livres para os menus.
+    var left_x := 22.0
+    var right_x := width - 202.0
+    var side_y := 150.0
+    var side_h := 54.0
+    var side_gap := 12.0
+    var left_items := [
+        ["EVENTOS", "✦"],
+        ["LOJA", "▣"],
+        ["PERSONAGENS", "♙"],
+        ["COFRE", "▤"]
+    ]
+    for i in range(left_items.size()):
+        var item:Array = left_items[i]
+        var b := _btn(ui, str(item[1]) + "  " + str(item[0]), Vector2(left_x, side_y + i*(side_h+side_gap)), Vector2(178,side_h), Color(0.12,0.16,0.19))
+        if i == 2: b.pressed.connect(_characters)
+        elif i == 3: b.pressed.connect(_wardrobe)
+        elif i == 1: b.pressed.connect(_royale)
+        else: b.pressed.connect(_royale)
+    var right_items := [
+        ["ARSENAL", "⚔"],
+        ["RANQUEADA", "🏆"],
+        ["TREINAMENTO", "◎"],
+        ["CONFIG.", "⚙"]
+    ]
+    for i in range(right_items.size()):
+        var item:Array = right_items[i]
+        var b := _btn(ui, str(item[1]) + "  " + str(item[0]), Vector2(right_x, side_y + i*(side_h+side_gap)), Vector2(178,side_h), Color(0.12,0.16,0.19))
+        if i == 0: b.pressed.connect(_inventory)
+        elif i == 3: b.pressed.connect(_settings)
+        else: b.pressed.connect(_start)
+
+    var event_panel := Panel.new()
+    event_panel.position = Vector2(22, height-170)
+    event_panel.size = Vector2(260,72)
+    event_panel.add_theme_stylebox_override("panel", _style(Color(0.10,0.075,0.045,0.92),Color(0.85,0.57,0.18),10))
+    ui.add_child(event_panel)
+    _txt(event_panel,"TEMPORADA PUNK",Vector2(14,8),Vector2(230,25),17).add_theme_color_override("font_color",Color(1.0,0.78,0.30))
+    _txt(event_panel,"Entre na batalha e conquiste recompensas",Vector2(14,36),Vector2(235,25),12)
+
+    # Navegação inferior no estilo de lobby de battle royale clássico.
+    var nav_y := height-78.0
+    var nav_names := ["COLEÇÃO","PERSONAGEM","ARMAS","MASCOTE"]
+    for i in range(nav_names.size()):
+        var b := _btn(ui,nav_names[i],Vector2(width*0.28+i*132.0,nav_y),Vector2(124,42),Color(0.07,0.10,0.12))
+        if i == 0: b.pressed.connect(_wardrobe)
+        elif i == 1: b.pressed.connect(_characters)
+        elif i == 2: b.pressed.connect(_inventory)
+        else: b.pressed.connect(_characters)
+    var play_w := 220.0
+    var play := _btn(ui,"▶  COMEÇAR",Vector2(width-play_w-22,height-145),Vector2(play_w,62),Color(0.82,0.39,0.055))
+    play.add_theme_font_size_override("font_size",24)
     play.pressed.connect(_start)
-    y += main_h + gap
-    var ch := _btn(ui, "♙  PERSONAGENS / SKINS", Vector2(left, y), Vector2(button_width, main_h), Color(0.10, 0.40, 0.34))
-    ch.pressed.connect(_characters)
-    y += main_h + gap
-    var inv := _btn(ui, "▣  INVENTÁRIO", Vector2(left, y), Vector2(button_width, main_h), Color(0.14, 0.25, 0.36))
-    inv.pressed.connect(_inventory)
-    y += main_h + gap
-    var vault := _btn(ui, "▣  COFRE DE ROUPAS", Vector2(left, y), Vector2(button_width, main_h), Color(0.24, 0.16, 0.38))
-    vault.pressed.connect(_wardrobe)
-    y += main_h + gap
-    var half_gap := 8.0
-    var half_width := (button_width - half_gap) * 0.5
-    var arsenal := _btn(ui, "⚔  ARSENAL", Vector2(left, y), Vector2(half_width, main_h), Color(0.12, 0.28, 0.42))
-    arsenal.pressed.connect(_inventory)
-    var royale := _btn(ui, "✦  ROYALE", Vector2(left + half_width + half_gap, y), Vector2(half_width, main_h), Color(0.48, 0.22, 0.08))
-    royale.pressed.connect(_royale)
-    y += main_h + gap
-    var settings := _btn(ui, "⚙  CONFIGURAÇÕES", Vector2(left, y), Vector2(button_width, main_h), Color(0.18, 0.21, 0.25))
-    settings.pressed.connect(_settings)
-    var foot := _txt(ui, "PUNK V1  |  🪙 %d  |  PARTIDAS %d  V %d  D %d  KILLS %d  REC %d" % [coins,matches_played,wins,losses,total_kills,best_kills], Vector2(0, height - 30), Vector2(width, 24), 13)
-    foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    var mode_label := _txt(ui,"BATTLE ROYALE  •  CLÁSSICO",Vector2(width-play_w-18,height-178),Vector2(play_w+10,25),14)
+    mode_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    mode_label.add_theme_color_override("font_color",Color(1.0,0.82,0.42))
+    var stats := _txt(ui,"NÍVEL 1   •   PARTIDAS %d   •   V %d   D %d   KILLS %d" % [matches_played,wins,losses,total_kills],Vector2(22,70),Vector2(440,25),13)
+    stats.add_theme_color_override("font_color",Color(0.80,0.84,0.85))
+
+
+func _build_lobby_showcase() -> void:
+    var old := get_node_or_null("LobbyShowcase")
+    if old:
+        old.queue_free()
+    var stage := Node3D.new()
+    stage.name = "LobbyShowcase"
+    add_child(stage)
+    var platform := MeshInstance3D.new()
+    var disk := CylinderMesh.new()
+    disk.top_radius = 1.75
+    disk.bottom_radius = 1.95
+    disk.height = 0.20
+    disk.radial_segments = 48
+    disk.material = _mat(Color(0.10,0.13,0.15),0.35,0.55)
+    platform.mesh = disk
+    platform.position = Vector3(0,-0.08,0)
+    stage.add_child(platform)
+    var rim := MeshInstance3D.new()
+    var ring := TorusMesh.new()
+    ring.inner_radius = 1.82
+    ring.outer_radius = 1.91
+    ring.rings = 48
+    ring.ring_segments = 12
+    ring.material = _mat(Color(0.95,0.55,0.12),0.28,0.5)
+    rim.mesh = ring
+    rim.position.y = 0.035
+    stage.add_child(rim)
+    # Painel de fundo para destacar a silhueta do personagem.
+    var backdrop := MeshInstance3D.new()
+    var panel := PlaneMesh.new()
+    panel.size = Vector2(5.2,4.8)
+    panel.material = _mat(Color(0.055,0.075,0.085))
+    backdrop.mesh = panel
+    backdrop.position = Vector3(0,2.1,-1.7)
+    stage.add_child(backdrop)
+    var model := Node3D.new()
+    model.name = "LobbyCharacter"
+    model.position = Vector3(0,1.02,0)
+    stage.add_child(model)
+    _build_player_armor(model)
+    _build_weapon_model(model)
+    var lobby_camera := get_node_or_null("LobbyCamera") as Camera3D
+    if lobby_camera:
+        lobby_camera.position = Vector3(0,1.65,6.2)
+        lobby_camera.look_at(Vector3(0,0.95,0),Vector3.UP)
+        lobby_camera.fov = 43.0
+        lobby_camera.current = true
+        camera = lobby_camera
 
 func _wardrobe() -> void:
     mode = "wardrobe"
     _reset_ui()
-    _bg(Color(0.018,0.012,0.035))
-    _txt(ui,"COFRE  /  MODA",Vector2(24,18),Vector2(500,42),30).add_theme_color_override("font_color",Color(1.0,0.78,0.22))
-    _txt(ui,"PERSONAGEM: "+selected+"  •  VISUAIS EQUIPADOS",Vector2(26,60),Vector2(700,28),15)
-    var width: float = get_viewport().size.x
+    var width:float = get_viewport().get_visible_rect().size.x
+    var height:float = get_viewport().get_visible_rect().size.y
+    _bg(Color(0.025,0.032,0.040))
+    var header := Panel.new()
+    header.position = Vector2(0,0)
+    header.size = Vector2(width,82)
+    header.add_theme_stylebox_override("panel",_style(Color(0.055,0.065,0.075),Color(0.72,0.48,0.16),0))
+    ui.add_child(header)
+    _txt(header,"COFRE",Vector2(24,10),Vector2(300,42),32).add_theme_color_override("font_color",Color(1.0,0.76,0.28))
+    _txt(header,"VISUAIS E EQUIPAMENTOS",Vector2(26,51),Vector2(420,22),13)
+    _txt(header,"PERSONAGEM: "+selected.to_upper(),Vector2(width-310,27),Vector2(280,30),16)
+    # Categorias em duas linhas para caber em telas menores.
+    var tab_w:float = (width-48.0)/4.0
     for i in range(wardrobe_categories.size()):
         var cat:String = wardrobe_categories[i]
-        var col := i % 2
-        var row := int(i / 2)
-        var b := _btn(ui,cat,Vector2(20+col*(width/2),105+row*53),Vector2(width/2-28,45),Color(0.38,0.24,0.07) if wardrobe_category==cat else Color(0.10,0.16,0.23))
-        b.pressed.connect(_wardrobe_category.bind(cat))
-    _txt(ui,"ITENS • "+wardrobe_category.to_upper()+"  (1000 MODELOS)",Vector2(24,300),Vector2(650,30),18)
+        var col:int = i%4
+        var row:int = int(i/4)
+        var tab := _btn(ui,cat,Vector2(12+col*(tab_w+6),96+row*48),Vector2(tab_w-6,40),Color(0.48,0.30,0.09) if wardrobe_category==cat else Color(0.10,0.15,0.19))
+        tab.add_theme_font_size_override("font_size",14)
+        tab.pressed.connect(_wardrobe_category.bind(cat))
+    _txt(ui,wardrobe_category.to_upper()+"  •  ESCOLHA UMA PEÇA",Vector2(22,202),Vector2(width-44,30),18).add_theme_color_override("font_color",Color(0.95,0.80,0.48))
     var names:Array[String] = _wardrobe_items(wardrobe_category)
-    for i in range(mini(names.size(),8)):
+    var columns:int = 3
+    var gap:float = 12.0
+    var card_w:float = (width-48.0-gap*2.0)/3.0
+    var card_h:float = minf(178.0,(height-290.0)/2.0)
+    for i in range(names.size()):
         var item:String = names[i]
-        var b := _btn(ui,item+("  ✓" if wardrobe_equipped.get(wardrobe_category,"")==item else ""),Vector2(24,340+i*42),Vector2(width-48,36),Color(0.10,0.35,0.30) if wardrobe_equipped.get(wardrobe_category,"")==item else Color(0.12,0.16,0.23))
-        b.pressed.connect(_equip_wardrobe.bind(item))
-    var back := _btn(ui,"← LOBBY",Vector2(24,get_viewport().size.y-58),Vector2(140,42),Color(0.18,0.20,0.24))
+        var col:int = i%columns
+        var row:int = int(i/columns)
+        var x:float = 12.0+col*(card_w+gap)
+        var y:float = 240.0+row*(card_h+10.0)
+        var selected_item:bool = wardrobe_equipped.get(wardrobe_category,"")==item
+        var card := Panel.new()
+        card.position = Vector2(x,y)
+        card.size = Vector2(card_w,card_h)
+        var colors := [Color(0.12,0.27,0.39),Color(0.32,0.12,0.16),Color(0.22,0.16,0.36),Color(0.38,0.27,0.09),Color(0.10,0.32,0.27),Color(0.28,0.28,0.30)]
+        var tint:Color = colors[i%colors.size()]
+        card.add_theme_stylebox_override("panel",_style(tint.darkened(0.35),Color(1.0,0.72,0.28) if selected_item else Color(0.30,0.39,0.42),12))
+        ui.add_child(card)
+        var preview := Panel.new()
+        preview.position = Vector2(10,10)
+        preview.size = Vector2(minf(94.0,card_w*0.30),card_h-20.0)
+        preview.add_theme_stylebox_override("panel",_style(tint,Color(0.85,0.78,0.60),8))
+        card.add_child(preview)
+        var glyphs := {"Conjuntos":"♟","Cabeças":"♙","Máscaras":"◉","Peitorais":"▰","Calças":"╫","Sapatos":"▱","Emotes":"★"}
+        var icon := _txt(preview,String(glyphs.get(wardrobe_category,"✦")),Vector2(0,preview.size.y*0.24),Vector2(preview.size.x,55),42)
+        icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        icon.add_theme_color_override("font_color",Color(1.0,0.88,0.60))
+        var name_label := _txt(card,item,Vector2(preview.size.x+22,18),Vector2(card_w-preview.size.x-34,54),15)
+        name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        var status := "EQUIPADO ✓" if selected_item else "TOCAR PARA EQUIPAR"
+        var choose := _btn(card,status,Vector2(preview.size.x+20,card_h-56),Vector2(card_w-preview.size.x-32,42),Color(0.52,0.34,0.08) if selected_item else Color(0.08,0.40,0.32))
+        choose.add_theme_font_size_override("font_size",12)
+        choose.pressed.connect(_equip_wardrobe.bind(item))
+    var back := _btn(ui,"← VOLTAR AO LOBBY",Vector2(18,height-52),Vector2(210,40),Color(0.16,0.20,0.23))
     back.pressed.connect(_lobby)
 
+
 func _wardrobe_items(category:String) -> Array[String]:
-    var prefix := category.trim_suffix("s")
-    var themes := ["Angelical Cósmico","Dragão Neon","Eclipse Sombrio","Guardião Celeste","Tempestade Rubra","Lenda Glacial","Samurai Dourado","Abismo Violeta"]
+    var catalog := {
+        "Conjuntos":["Conjunto Dragão Neon","Conjunto Eclipse Sombrio","Conjunto Guardião Celeste","Conjunto Tempestade Rubra","Conjunto Lenda Glacial","Conjunto Samurai Dourado"],
+        "Cabeças":["Cabelo Espinhos","Corte Urbano","Capuz Tático","Cabelo Prateado","Capacete de Combate","Coroa Imperial"],
+        "Máscaras":["Máscara Tática","Máscara Dragão","Respirador Urbano","Máscara Eclipse","Visor Neon","Máscara Glacial"],
+        "Peitorais":["Jaqueta Eclipse","Colete de Assalto","Jaqueta Carmesim","Peitoral Celeste","Casaco Glacial","Colete Dourado"],
+        "Calças":["Calça Angelical Cósmica","Calça Cargo Tática","Calça Dragão Neon","Calça Eclipse","Calça Glacial","Calça Samurai"],
+        "Sapatos":["Tênis Azul Elétrico","Bota de Combate","Tênis Carmesim","Bota Glacial","Tênis Neon","Bota Imperial"],
+        "Emotes":["Dança da Vitória","Saudação do Dragão","Pose Lendária","Passo Neon","Comemoração Royale","Desafio PUNK"]
+    }
     var result:Array[String] = []
-    for i in range(1000):
-        result.append(prefix+" "+themes[i % themes.size()]+" • "+str(i+1))
+    for item in catalog.get(category,[]):
+        result.append(String(item))
     return result
+
 
 func _wardrobe_category(category:String) -> void:
     wardrobe_category = category
