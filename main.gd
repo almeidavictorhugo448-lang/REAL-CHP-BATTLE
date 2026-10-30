@@ -60,7 +60,6 @@ var zone_tick := 0.0
 var shot_tick := 0.0
 var reload_tick := 0.0
 var reload_total := 0.0
-var reload_total := 0.0
 var ability_tick := 0.0
 var ability_cd := 0.0
 var medkits := 3
@@ -79,6 +78,8 @@ var battle_ui: Control
 var hp_text: Label
 var ammo_text: Label
 var reload_text: Label
+var hit_marker: Label
+var hit_marker_tick := 0.0
 var reload_text: Label
 var top_text: Label
 var zone_text: Label
@@ -564,9 +565,9 @@ func _loot() -> void:
 
 func _battle_ui() -> void:
     battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui.add_child(battle_ui)
-    hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18); reload_text=_txt(battle_ui,"",Vector2.ZERO,Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false; reload_text=_txt(battle_ui,"",Vector2(0,0),Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false
+    hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18); reload_text=_txt(battle_ui,"",Vector2.ZERO,Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false
     top_text=_txt(battle_ui,"",Vector2(0,18),Vector2(320,30),17); zone_text=_txt(battle_ui,"",Vector2(0,48),Vector2(320,28),15); top_text.position.x=get_viewport().size.x/2-160; zone_text.position.x=get_viewport().size.x/2-160; top_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; zone_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-    var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+    var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; hit_marker=_txt(battle_ui,"",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); hit_marker.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; hit_marker.add_theme_color_override("font_color",Color(1.0,0.28,0.20)); hit_marker.visible=false
     joy_base=Panel.new(); joy_base.size=Vector2(132,132); joy_base.add_theme_stylebox_override("panel",_style(Color(0.04,0.09,0.12,0.45),Color(0.5,0.85,0.8,0.65),70)); joy_base.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_base)
     joy_knob=Panel.new(); joy_knob.size=Vector2(58,58); joy_knob.add_theme_stylebox_override("panel",_style(Color(0.25,0.85,0.80,0.75),Color.WHITE,40)); joy_knob.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_knob)
     fire=_btn(battle_ui,"ATIRAR",Vector2.ZERO,Vector2(112,112),Color(0.72,0.10,0.10)); switch_weapon=_btn(battle_ui,"TROCAR",Vector2.ZERO,Vector2(104,46),Color(0.24,0.30,0.42)); reload=_btn(battle_ui,"RECARREGAR",Vector2.ZERO,Vector2(145,50),Color(0.16,0.28,0.36)); ability=_btn(battle_ui,"DRAGÃO",Vector2.ZERO,Vector2(155,58),Color(0.10,0.46,0.38)); medkit=_btn(battle_ui,"KIT +50",Vector2.ZERO,Vector2(105,48),Color(0.14,0.38,0.24)); aim=_btn(battle_ui,"MIRA",Vector2.ZERO,Vector2(82,48),Color(0.20,0.28,0.40))
@@ -597,7 +598,7 @@ func _layout_battle() -> void:
 
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
-    shot_tick=maxf(0,shot_tick-delta); recoil_kick=maxf(0,recoil_kick-delta*0.045); camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
+    shot_tick=maxf(0,shot_tick-delta); hit_marker_tick=maxf(0,hit_marker_tick-delta); if hit_marker_tick<=0: hit_marker.visible=false; recoil_kick=maxf(0,recoil_kick-delta*0.045); camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
     if fire_held and reload_tick<=0:
         _shoot()
@@ -713,6 +714,7 @@ func _shoot() -> void:
     var target=hit.get("collider")
     if target == null or not bots.has(target):
         return
+    hit_marker.visible=true; hit_marker.text="✕"; hit_marker_tick=0.16
     var id:=target.get_instance_id()
     var damage:=float(weapon_damage.get(active_weapon,28.0))
     if active_weapon=="M1014":
