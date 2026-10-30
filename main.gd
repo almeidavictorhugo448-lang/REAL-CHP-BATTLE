@@ -890,11 +890,11 @@ func _deploy_gloo_wall() -> void:
     active_gloo_walls.append(wall)
     gloo_button.text = "GELO %d" % gloo_charges
     gloo_button.disabled = gloo_charges <= 0
-    _toast("PAREDE DE GELO ATIVADA • 20s")
+    _toast("PAREDE DE GELO ATIVADA • 60s")
     _expire_gloo_wall(wall)
 
 func _expire_gloo_wall(wall:StaticBody3D) -> void:
-    await get_tree().create_timer(20.0).timeout
+    await get_tree().create_timer(60.0).timeout
     if is_instance_valid(wall):
         wall.queue_free()
     active_gloo_walls.erase(wall)
