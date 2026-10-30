@@ -60,6 +60,7 @@ var zone_tick := 0.0
 var shot_tick := 0.0
 var reload_tick := 0.0
 var reload_total := 0.0
+var reload_total := 0.0
 var ability_tick := 0.0
 var ability_cd := 0.0
 var medkits := 3
@@ -77,6 +78,7 @@ var ui: Control
 var battle_ui: Control
 var hp_text: Label
 var ammo_text: Label
+var reload_text: Label
 var reload_text: Label
 var top_text: Label
 var zone_text: Label
@@ -562,7 +564,7 @@ func _loot() -> void:
 
 func _battle_ui() -> void:
     battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui.add_child(battle_ui)
-    hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18); reload_text=_txt(battle_ui,"",Vector2(0,0),Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false
+    hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18); reload_text=_txt(battle_ui,"",Vector2.ZERO,Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false; reload_text=_txt(battle_ui,"",Vector2(0,0),Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false
     top_text=_txt(battle_ui,"",Vector2(0,18),Vector2(320,30),17); zone_text=_txt(battle_ui,"",Vector2(0,48),Vector2(320,28),15); top_text.position.x=get_viewport().size.x/2-160; zone_text.position.x=get_viewport().size.x/2-160; top_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; zone_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     joy_base=Panel.new(); joy_base.size=Vector2(132,132); joy_base.add_theme_stylebox_override("panel",_style(Color(0.04,0.09,0.12,0.45),Color(0.5,0.85,0.8,0.65),70)); joy_base.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_base)
@@ -578,7 +580,7 @@ func _battle_ui() -> void:
 func _layout_battle() -> void:
     if not battle_ui: return
     var s:=get_viewport().get_visible_rect().size
-    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42); reload_text.position=Vector2(s.x/2-130,s.y*0.68)
+    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42); reload_text.position=Vector2(s.x/2-130,s.y*0.68); reload_text.position=Vector2(s.x/2-130,s.y*0.68)
     joy_base.position=Vector2(24,s.y-164); joy_knob.position=joy_base.position+Vector2(37,37)
     fire.position=Vector2(s.x-126,s.y-148)
     switch_weapon.position=Vector2(s.x-250,s.y-218)
@@ -752,6 +754,7 @@ func _reload() -> void:
         return
     fire_held=false
     reload_tick=float(weapon_reload.get(active_weapon,1.5))
+    reload_total=reload_tick
     _toast("RECARREGANDO "+active_weapon+"...")
 func _medkit() -> void:
     if medkits>0 and hp<MAX_HP: medkits-=1; hp=minf(MAX_HP,hp+50); _toast("KIT MÉDICO +50")
@@ -789,6 +792,10 @@ func _pickup() -> void:
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
     ammo_text.text="%s • %s  %02d/%02d  |  RES %03d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size(),reserve_ammo]
+    reload_text.visible=reload_tick>0
+    if reload_tick>0:
+        var progress:=clampf(1.0-reload_tick/maxf(0.01,reload_total),0.0,1.0)
+        reload_text.text="RECARREGANDO  %d%%"%int(progress*100.0)
     top_text.text="RIVAIS %02d   |   TEMPO %03d"%[bots.size(),int(maxf(0,time_left))]
     zone_text.text="ZONA %.0fm"%zone
     ability.text="DRAGÃO %s"%(["PRONTO" if ability_cd<=0 else "%ds"%int(ceil(ability_cd))][0])
