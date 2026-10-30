@@ -426,165 +426,120 @@ func _build_lobby_showcase() -> void:
     var stage := Node3D.new()
     stage.name = "LobbyShowcase"
     add_child(stage)
-    var platform := MeshInstance3D.new()
-    var disk := CylinderMesh.new()
-    disk.top_radius = 1.75
-    disk.bottom_radius = 1.95
-    disk.height = 0.20
-    disk.radial_segments = 48
-    disk.material = _mat(Color(0.10,0.13,0.15),0.35,0.55)
-    platform.mesh = disk
-    platform.position = Vector3(0,-0.08,0)
-    stage.add_child(platform)
-    var rim := MeshInstance3D.new()
-    var ring := TorusMesh.new()
-    ring.inner_radius = 1.82
-    ring.outer_radius = 1.91
-    ring.rings = 48
-    ring.ring_segments = 12
-    ring.material = _mat(Color(0.95,0.55,0.12),0.28,0.5)
-    rim.mesh = ring
-    rim.position.y = 0.035
-    stage.add_child(rim)
-    # Painel de fundo para destacar a silhueta do personagem.
-    var backdrop := MeshInstance3D.new()
-    var panel := PlaneMesh.new()
-    panel.size = Vector2(5.2,4.8)
-    panel.material = _mat(Color(0.055,0.075,0.085))
-    backdrop.mesh = panel
-    backdrop.position = Vector3(0,2.1,-1.7)
-    backdrop.rotation_degrees.x = 90.0
-    stage.add_child(backdrop)
+
+    # Base costeira original: pista, hangar, horizonte e iluminação.
+    var ground_mat := _mat(Color(0.19,0.23,0.20),0.96)
+    var concrete_mat := _mat(Color(0.27,0.29,0.28),0.9)
+    var dark_metal := _mat(Color(0.055,0.075,0.085),0.48,0.58)
+    var trim_mat := _mat(Color(0.92,0.48,0.10),0.42,0.38)
+    var glass_mat := _mat(Color(0.08,0.27,0.34),0.22,0.55)
+    var floor := MeshInstance3D.new()
+    var floor_mesh := PlaneMesh.new()
+    floor_mesh.size = Vector2(90,90)
+    floor_mesh.material = ground_mat
+    floor.mesh = floor_mesh
+    floor.position = Vector3(0,-0.30,0)
+    stage.add_child(floor)
+
+    # Pista de concreto, faixas de segurança e balizadores.
+    _box(stage,Vector3(34,0.10,18),Vector3(0,-0.19,-11),concrete_mat)
+    for i in range(9):
+        _box(stage,Vector3(1.5,0.025,0.18),Vector3(-14.0+float(i)*3.5,-0.125,-11),trim_mat)
+    for side in [-1.0,1.0]:
+        for i in range(5):
+            var lamp := OmniLight3D.new()
+            lamp.position = Vector3(side*16.2,0.24,-18.0+float(i)*3.5)
+            lamp.light_color = Color(1.0,0.58,0.24)
+            lamp.light_energy = 0.48
+            lamp.omni_range = 4.0
+            stage.add_child(lamp)
+            _box(stage,Vector3(0.22,0.34,0.22),Vector3(side*16.2,0.12,-18.0+float(i)*3.5),dark_metal)
+
+    # Hangar aberto com estrutura metálica, vidraças e portão.
+    _box(stage,Vector3(23,0.42,0.55),Vector3(0,5.0,-5.0),dark_metal)
+    _box(stage,Vector3(23,0.20,0.16),Vector3(0,4.72,-4.68),trim_mat)
+    for side in [-1.0,1.0]:
+        _box(stage,Vector3(0.55,5.0,0.65),Vector3(side*11.0,2.25,-5.0),dark_metal)
+        _box(stage,Vector3(4.8,2.8,0.16),Vector3(side*7.9,2.1,-4.7),glass_mat)
+        _box(stage,Vector3(0.12,3.0,0.20),Vector3(side*5.5,2.1,-4.56),trim_mat)
+        _box(stage,Vector3(0.12,3.0,0.20),Vector3(side*10.25,2.1,-4.56),trim_mat)
+    _box(stage,Vector3(5.0,3.2,0.22),Vector3(0,1.7,-5.0),dark_metal)
+    _box(stage,Vector3(4.1,0.12,0.08),Vector3(0,3.35,-4.82),trim_mat)
+    _box(stage,Vector3(0.16,2.7,0.08),Vector3(-2.05,1.8,-4.82),trim_mat)
+    _box(stage,Vector3(0.16,2.7,0.08),Vector3(2.05,1.8,-4.82),trim_mat)
+
+    # Morros e instalações dão profundidade ao horizonte.
+    var hill_mat := _mat(Color(0.16,0.25,0.22),1.0)
+    for i in range(7):
+        var hill := MeshInstance3D.new()
+        var hill_mesh := SphereMesh.new()
+        hill_mesh.radius = 7.0+float(i%3)*2.0
+        hill_mesh.height = 9.0+float(i%3)*2.5
+        hill_mesh.radial_segments = 10
+        hill_mesh.rings = 5
+        hill_mesh.material = hill_mat
+        hill.mesh = hill_mesh
+        hill.position = Vector3(-34.0+float(i)*11.0,-1.8,-34.0-float(i%2)*5.0)
+        hill.scale = Vector3(1.8,0.85,0.8)
+        stage.add_child(hill)
+    for i in range(4):
+        var tower_x := -24.0+float(i)*16.0
+        _box(stage,Vector3(2.8,5.5,2.8),Vector3(tower_x,2.45,-28),dark_metal)
+        _box(stage,Vector3(3.2,0.28,3.2),Vector3(tower_x,5.25,-28),trim_mat)
+        _box(stage,Vector3(2.2,1.1,0.12),Vector3(tower_x,3.8,-26.55),glass_mat)
+
+    # Caixas de suprimentos e barricadas laterais.
+    for side in [-1.0,1.0]:
+        _box(stage,Vector3(2.5,1.6,2.0),Vector3(side*6.4,0.52,1.0),dark_metal)
+        _box(stage,Vector3(2.65,0.12,2.12),Vector3(side*6.4,1.38,1.0),trim_mat)
+        for k in range(3):
+            _box(stage,Vector3(1.1,0.9,1.0),Vector3(side*(9.0+float(k%2)*1.2),0.25,float(k)*1.25-0.5),concrete_mat)
+    _box(stage,Vector3(0.10,2.4,0.10),Vector3(-9.4,1.0,-1.8),dark_metal)
+    _box(stage,Vector3(3.0,1.4,0.10),Vector3(-7.9,2.0,-1.8),trim_mat)
+    _box(stage,Vector3(2.75,1.18,0.08),Vector3(-7.9,2.0,-1.72),dark_metal)
+
+    # Plataforma baixa integrada ao chão e aro de luz.
+    _box(stage,Vector3(4.2,0.18,3.6),Vector3(0,-0.12,0),dark_metal)
+    _box(stage,Vector3(4.0,0.045,3.4),Vector3(0,-0.015,0),trim_mat)
+    var ring := MeshInstance3D.new()
+    ring.name = "ShowcaseRing"
+    var ring_mesh := TorusMesh.new()
+    ring_mesh.inner_radius = 1.78
+    ring_mesh.outer_radius = 1.84
+    ring_mesh.rings = 48
+    ring_mesh.ring_segments = 12
+    ring_mesh.material = _mat(Color(0.95,0.54,0.12),0.25,0.42)
+    ring.mesh = ring_mesh
+    ring.position = Vector3(0,0.025,0)
+    stage.add_child(ring)
+
     var model := Node3D.new()
     model.name = "LobbyCharacter"
-    model.position = Vector3(0,1.02,0)
-    model.scale = Vector3(1.28,1.28,1.28)
+    model.position = Vector3(0,0.04,0.05)
+    model.scale = Vector3(1.42,1.42,1.42)
     stage.add_child(model)
     _build_player_armor(model)
     _build_weapon_model(model)
-    # Cenário de lobby amplo com piso, placas industriais e luzes de recorte.
-    var floor := MeshInstance3D.new()
-    var floor_mesh := PlaneMesh.new()
-    floor_mesh.size = Vector2(34,34)
-    floor_mesh.material = _mat(Color(0.16,0.20,0.19),0.92)
-    floor.mesh = floor_mesh
-    floor.position = Vector3(0,-0.20,0)
-    stage.add_child(floor)
-    for side in [-1.0,1.0]:
-        var pillar := MeshInstance3D.new()
-        var pillar_mesh := BoxMesh.new()
-        pillar_mesh.size = Vector3(0.34,4.8,0.42)
-        pillar_mesh.material = _mat(Color(0.075,0.10,0.12),0.48,0.45)
-        pillar.mesh = pillar_mesh
-        pillar.position = Vector3(side*3.15,1.8,-1.0)
-        stage.add_child(pillar)
-        var strip := MeshInstance3D.new()
-        var strip_mesh := BoxMesh.new()
-        strip_mesh.size = Vector3(0.07,3.8,0.05)
-        strip_mesh.material = _mat(Color(0.95,0.48,0.12),0.28,0.35)
-        strip.mesh = strip_mesh
-        strip.position = Vector3(side*2.92,1.8,-0.76)
-        stage.add_child(strip)
+
+    var key_light := OmniLight3D.new()
+    key_light.position = Vector3(0,5.2,4.2)
+    key_light.light_color = Color(1.0,0.78,0.57)
+    key_light.light_energy = 2.2
+    key_light.omni_range = 12.0
+    stage.add_child(key_light)
+    var rim_light := OmniLight3D.new()
+    rim_light.position = Vector3(-4.0,3.5,-2.0)
+    rim_light.light_color = Color(0.18,0.62,1.0)
+    rim_light.light_energy = 1.8
+    rim_light.omni_range = 9.0
+    stage.add_child(rim_light)
+
     var lobby_camera := get_node_or_null("LobbyCamera") as Camera3D
     if lobby_camera:
-        lobby_camera.position = Vector3(0,1.52,4.65)
-        lobby_camera.look_at(Vector3(0,0.92,0),Vector3.UP)
-        lobby_camera.fov = 37.0
-        lobby_camera.current = true
-        camera = lobby_camera
+        lobby_camera.position = Vector3(0,2.05,8.1)
+        lobby_camera.look_at(Vector3(0,1.55,-0.25),Vector3.UP)
+        lobby_camera.fov = 42.0
 
-func _wardrobe() -> void:
-    mode = "wardrobe"
-    _reset_ui()
-    var width:float = get_viewport().get_visible_rect().size.x
-    var height:float = get_viewport().get_visible_rect().size.y
-    _bg(Color(0.025,0.032,0.040))
-    var header := Panel.new()
-    header.position = Vector2(0,0)
-    header.size = Vector2(width,82)
-    header.add_theme_stylebox_override("panel",_style(Color(0.055,0.065,0.075),Color(0.72,0.48,0.16),0))
-    ui.add_child(header)
-    _txt(header,"COFRE",Vector2(24,10),Vector2(300,42),32).add_theme_color_override("font_color",Color(1.0,0.76,0.28))
-    _txt(header,"VISUAIS E EQUIPAMENTOS",Vector2(26,51),Vector2(420,22),13)
-    _txt(header,"PERSONAGEM: "+selected.to_upper(),Vector2(width-310,27),Vector2(280,30),16)
-    # Categorias em duas linhas para caber em telas menores.
-    var tab_w:float = (width-48.0)/4.0
-    for i in range(wardrobe_categories.size()):
-        var cat:String = wardrobe_categories[i]
-        var col:int = i%4
-        var row:int = int(i/4)
-        var tab := _btn(ui,cat,Vector2(12+col*(tab_w+6),96+row*48),Vector2(tab_w-6,40),Color(0.48,0.30,0.09) if wardrobe_category==cat else Color(0.10,0.15,0.19))
-        tab.add_theme_font_size_override("font_size",14)
-        tab.pressed.connect(_wardrobe_category.bind(cat))
-    _txt(ui,wardrobe_category.to_upper()+"  •  ESCOLHA UMA PEÇA",Vector2(22,202),Vector2(width-44,30),18).add_theme_color_override("font_color",Color(0.95,0.80,0.48))
-    var names:Array[String] = _wardrobe_items(wardrobe_category)
-    var columns:int = 3
-    var gap:float = 12.0
-    var card_w:float = (width-48.0-gap*2.0)/3.0
-    var card_h:float = minf(178.0,(height-290.0)/2.0)
-    for i in range(names.size()):
-        var item:String = names[i]
-        var col:int = i%columns
-        var row:int = int(i/columns)
-        var x:float = 12.0+col*(card_w+gap)
-        var y:float = 240.0+row*(card_h+10.0)
-        var selected_item:bool = wardrobe_equipped.get(wardrobe_category,"")==item
-        var card := Panel.new()
-        card.position = Vector2(x,y)
-        card.size = Vector2(card_w,card_h)
-        var colors := [Color(0.12,0.27,0.39),Color(0.32,0.12,0.16),Color(0.22,0.16,0.36),Color(0.38,0.27,0.09),Color(0.10,0.32,0.27),Color(0.28,0.28,0.30)]
-        var tint:Color = colors[i%colors.size()]
-        card.add_theme_stylebox_override("panel",_style(tint.darkened(0.35),Color(1.0,0.72,0.28) if selected_item else Color(0.30,0.39,0.42),12))
-        ui.add_child(card)
-        var preview := Panel.new()
-        preview.position = Vector2(10,10)
-        preview.size = Vector2(minf(94.0,card_w*0.30),card_h-20.0)
-        preview.add_theme_stylebox_override("panel",_style(tint,Color(0.85,0.78,0.60),8))
-        card.add_child(preview)
-        var art_names := {"Conjuntos":"conjuntos","Cabeças":"cabecas","Máscaras":"mascaras","Peitorais":"peitorais","Calças":"calcas","Sapatos":"sapatos","Emotes":"emotes"}
-        var artwork := TextureRect.new()
-        artwork.texture = load("res://assets/wardrobe/"+String(art_names.get(wardrobe_category,"conjuntos"))+".svg")
-        artwork.position = Vector2(0,8)
-        artwork.size = Vector2(preview.size.x,preview.size.x)
-        artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-        artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-        artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
-        preview.add_child(artwork)
-        var name_label := _txt(card,item,Vector2(preview.size.x+22,18),Vector2(card_w-preview.size.x-34,54),15)
-        name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        var status := "EQUIPADO ✓" if selected_item else "TOCAR PARA EQUIPAR"
-        var choose := _btn(card,status,Vector2(preview.size.x+20,card_h-56),Vector2(card_w-preview.size.x-32,42),Color(0.52,0.34,0.08) if selected_item else Color(0.08,0.40,0.32))
-        choose.add_theme_font_size_override("font_size",12)
-        choose.pressed.connect(_equip_wardrobe.bind(item))
-    var back := _btn(ui,"← VOLTAR AO LOBBY",Vector2(18,height-52),Vector2(210,40),Color(0.16,0.20,0.23))
-    back.pressed.connect(_lobby)
-
-
-func _wardrobe_items(category:String) -> Array[String]:
-    var catalog := {
-        "Conjuntos":["Conjunto Dragão Neon","Conjunto Eclipse Sombrio","Conjunto Guardião Celeste","Conjunto Tempestade Rubra","Conjunto Lenda Glacial","Conjunto Samurai Dourado"],
-        "Cabeças":["Cabelo Espinhos","Corte Urbano","Capuz Tático","Cabelo Prateado","Capacete de Combate","Coroa Imperial"],
-        "Máscaras":["Máscara Tática","Máscara Dragão","Respirador Urbano","Máscara Eclipse","Visor Neon","Máscara Glacial"],
-        "Peitorais":["Jaqueta Eclipse","Colete de Assalto","Jaqueta Carmesim","Peitoral Celeste","Casaco Glacial","Colete Dourado"],
-        "Calças":["Calça Angelical Cósmica","Calça Cargo Tática","Calça Dragão Neon","Calça Eclipse","Calça Glacial","Calça Samurai"],
-        "Sapatos":["Tênis Azul Elétrico","Bota de Combate","Tênis Carmesim","Bota Glacial","Tênis Neon","Bota Imperial"],
-        "Emotes":["Dança da Vitória","Saudação do Dragão","Pose Lendária","Passo Neon","Comemoração Royale","Desafio PUNK"]
-    }
-    var result:Array[String] = []
-    for item in catalog.get(category,[]):
-        result.append(String(item))
-    return result
-
-
-func _wardrobe_category(category:String) -> void:
-    wardrobe_category = category
-    _wardrobe()
-
-func _equip_wardrobe(item:String) -> void:
-    wardrobe_equipped[wardrobe_category] = item
-    _save_profile()
-    _toast("EQUIPADO: "+item)
-    _wardrobe()
 
 func _royale() -> void:
     mode = "royale"
