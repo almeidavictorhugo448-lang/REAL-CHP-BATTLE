@@ -54,9 +54,25 @@ jobs:
           chmod +x "$GODOT_BIN"
           echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
 
-      - name: Verify project
+      - name: Validate all scripts and scenes
+        shell: bash
         run: |
-          "$GODOT_BIN" --headless --path . --editor --quit
+          set -o pipefail
+          "$GODOT_BIN" --headless --path . --editor --quit 2>&1 | tee /tmp/godot-editor.log
+          if grep -E "SCRIPT ERROR:|Parse Error:|Failed to load script|ERROR: Failed to load" /tmp/godot-editor.log; then
+            echo "Godot encontrou erros de script. APK bloqueado."
+            exit 1
+          fi
+          "$GODOT_BIN" --headless --path . --quit-after 3 2>&1 | tee /tmp/godot-intro.log
+          if grep -E "SCRIPT ERROR:|Parse Error:|ERROR:" /tmp/godot-intro.log; then
+            echo "A cena inicial falhou. APK bloqueado."
+            exit 1
+          fi
+          "$GODOT_BIN" --headless --path . res://main.tscn --quit-after 3 2>&1 | tee /tmp/godot-game.log
+          if grep -E "SCRIPT ERROR:|Parse Error:|ERROR:" /tmp/godot-game.log; then
+            echo "A cena principal falhou. APK bloqueado."
+            exit 1
+          fi
 
       - name: Export APK
         run: |
