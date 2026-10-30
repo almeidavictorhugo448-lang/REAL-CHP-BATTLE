@@ -3,7 +3,7 @@ name: Build PUNK APK
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature/wardrobe-customization" ]
 
 jobs:
   build-android:
