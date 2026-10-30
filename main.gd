@@ -377,11 +377,13 @@ func _select_weapon(w: String) -> void:
 func _weapon_skin_action(sn: String) -> void:
     if sn in weapon_skin_owned[active_weapon]:
         weapon_skin_equipped[active_weapon] = sn
+        _refresh_weapon_model()
         _inventory()
     elif coins >= 100:
         coins -= 100
         weapon_skin_owned[active_weapon].append(sn)
         weapon_skin_equipped[active_weapon] = sn
+        _refresh_weapon_model()
         _inventory()
     else:
         _toast("MOEDAS INSUFICIENTES!")
@@ -399,6 +401,7 @@ func _start() -> void:
     _clear_world()
     _build_map()
     _player()
+    ammo=_mag_size()
     _battle_ui()
     _bots()
     _loot()
@@ -669,17 +672,21 @@ func _shoot() -> void:
             bot_hp[id]=float(bot_hp.get(id,100))-dmg
             if bot_hp[id]<=0: kills+=1; coins+=10; bots.erase(obj); bot_hp.erase(id); bot_t.erase(id); obj.queue_free(); _toast("ELIMINAÇÃO +10 🪙")
 
+func _refresh_weapon_model() -> void:
+    if not is_instance_valid(player): return
+    var old_model=player.get_node_or_null("WeaponModel")
+    if old_model: old_model.free()
+    _build_weapon_model(player)
+
 func _mag_size() -> int:
     return int(weapon_mag.get(active_weapon,MAG))
 
 func _switch_weapon() -> void:
-    if weapon_catalog.is_empty(): return
+    if weapon_catalog.is_empty() or not is_instance_valid(player): return
     var index=weapon_catalog.find(active_weapon)
     active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
-    var old_model=player.get_node_or_null("WeaponModel")
-    if old_model: old_model.free()
-    _build_weapon_model(player)
-    ammo=MAG
+    _refresh_weapon_model()
+    ammo=_mag_size()
     reload_tick=0.0
     _hud()
     _toast("ARMA: "+active_weapon)
@@ -713,7 +720,7 @@ func _pickup() -> void:
         if player.global_position.distance_to(a.global_position)<1.7:
             var k:String=a.get_meta("kind")
             match k:
-                "MUNIÇÃO": ammo=min(MAG,ammo+15)
+                "MUNIÇÃO": ammo=min(_mag_size(),ammo+15)
                 "COLETE": shield=minf(70,shield+35)
                 "KIT": medkits+=1
                 "GELO": shield=minf(90,shield+20)
