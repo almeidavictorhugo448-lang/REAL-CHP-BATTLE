@@ -53,6 +53,7 @@ var shield := 0.0
 var energy := MAX_ENERGY
 var ammo := MAG
 var reserve_ammo := 120
+var weapon_ammo: Dictionary = {}
 var kills := 0
 var matches_played := 0
 var wins := 0
@@ -695,7 +696,9 @@ func _start() -> void:
     energy=MAX_ENERGY
     medkits=3
     reserve_ammo=120
+    weapon_ammo.clear()
     ammo=_mag_size()
+    weapon_ammo[active_weapon]=ammo
     time_left=START_TIME
     zone=MAP
     zone_tick=0.0
@@ -1469,6 +1472,7 @@ func _physics_process(delta:float) -> void:
             var loaded:=mini(needed,reserve_ammo)
             ammo+=loaded
             reserve_ammo-=loaded
+            weapon_ammo[active_weapon]=ammo
     if not airdrop_spawned and time_left <= START_TIME - 90.0:
         airdrop_spawned=true
         _spawn_airdrop()
@@ -1594,6 +1598,12 @@ func _aim_assist(delta:float) -> void:
         var distance:=offset.length()
         if distance>32.0 or distance<0.1: continue
         if forward.dot(offset.normalized())<0.78: continue
+        # A assistência não atravessa paredes ou construções.
+        var sight_query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(camera.global_position, rival.global_position + Vector3.UP * 0.45)
+        sight_query.exclude=[player]
+        var sight_hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(sight_query)
+        if sight_hit.is_empty() or sight_hit.get("collider") != rival:
+            continue
         if distance<best_distance:
             best=rival
             best_distance=distance
@@ -1622,6 +1632,7 @@ func _shoot() -> void:
     recoil_kick=minf(0.12,recoil_kick+kick)
     camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
     ammo-=1
+    weapon_ammo[active_weapon]=ammo
     var origin:=camera.global_position
     var direction:Vector3=-camera.global_transform.basis.z
     var spread:=float(weapon_spread.get(active_weapon,0.012))
@@ -1631,7 +1642,7 @@ func _shoot() -> void:
     var hit:=get_world_3d().direct_space_state.intersect_ray(query)
     if hit.is_empty():
         return
-    var target=hit.get("collider")
+    var target: Object = hit.get("collider")
     if target == null or not bots.has(target):
         return
     hit_marker.visible=true; hit_marker.text="✕"; hit_marker_tick=0.16
@@ -1679,13 +1690,19 @@ func _mag_size() -> int:
     return int(weapon_mag.get(active_weapon,MAG))
 
 func _switch_weapon() -> void:
-    if weapon_catalog.is_empty() or not is_instance_valid(player) or match_done: return
-    var index=weapon_catalog.find(active_weapon)
+    if weapon_catalog.is_empty() or not is_instance_valid(player) or match_done or reload_tick>0.0:
+        return
+    # Cada arma conserva a munição que já estava no carregador.
+    weapon_ammo[active_weapon]=ammo
+    var index: int = weapon_catalog.find(active_weapon)
     active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
+    if weapon_ammo.has(active_weapon):
+        ammo=int(weapon_ammo[active_weapon])
+    else:
+        ammo=mini(_mag_size(),reserve_ammo)
+        reserve_ammo-=ammo
+        weapon_ammo[active_weapon]=ammo
     _refresh_weapon_model()
-    ammo=mini(_mag_size(),reserve_ammo)
-    reserve_ammo-=ammo
-    reload_tick=0.0
     _save_profile()
     _hud()
     _toast("ARMA: "+active_weapon)
