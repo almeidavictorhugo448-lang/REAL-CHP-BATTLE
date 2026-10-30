@@ -592,8 +592,15 @@ func _characters() -> void:
     for i in range(chars.keys().size()):
         var n:String=chars.keys()[i]; var b:=_btn(ui,n,Vector2(24+i*134,116),Vector2(124,50),chars[n]["color"]*0.72); b.pressed.connect(_pick_char.bind(n))
     var card:=Panel.new(); card.position=Vector2(25,188); card.size=Vector2(get_viewport().size.x-50,220); card.add_theme_stylebox_override("panel",_style(Color(0.03,0.055,0.08),Color(0.20,0.50,0.52),20)); ui.add_child(card)
-    var sw:=ColorRect.new(); sw.color=chars[selected]["color"]; sw.position=Vector2(25,30); sw.size=Vector2(130,150); card.add_child(sw)
-    var nm:=_txt(card,selected,Vector2(180,28),Vector2(400,42),30); nm.add_theme_color_override("font_color",chars[selected]["color"])
+    var portrait:=TextureRect.new()
+    portrait.position=Vector2(18,12)
+    portrait.size=Vector2(150,194)
+    portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+    portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    portrait.texture=load("res://assets/skins/"+selected.to_lower()+".svg")
+    portrait.modulate=Color(1.0,1.0,1.0) if skin=="Original" else (Color(0.78,0.90,1.0) if skin in ["Prata","Gelo"] else (Color(1.0,0.82,0.62) if skin in ["Fogo","Ouro","Dragão Negro"] else Color(0.90,0.76,1.0)))
+    card.add_child(portrait)
+    var nm:=_txt(card,selected,Vector2(190,28),Vector2(400,42),30); nm.add_theme_color_override("font_color",chars[selected]["color"])
     _txt(card,"HP base: %d"%int(chars[selected]["hp"]),Vector2(180,78),Vector2(400,30),18)
     _txt(card,chars[selected]["ability"],Vector2(180,116),Vector2(650,55),16)
     _txt(ui,"SKINS",Vector2(30,435),Vector2(200,35),22)
