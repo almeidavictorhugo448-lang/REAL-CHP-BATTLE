@@ -79,6 +79,7 @@ var aim: Button
 var reload: Button
 var ability: Button
 var medkit: Button
+var switch_weapon: Button
 
 var chars := {
     "Kosmos": {"color":Color(0.12,0.32,0.95),"hp":250.0,"ability":"Dragão: 250 HP + 90 escudo / 30s","cd":120.0},
@@ -526,7 +527,8 @@ func _battle_ui() -> void:
     var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     joy_base=Panel.new(); joy_base.size=Vector2(132,132); joy_base.add_theme_stylebox_override("panel",_style(Color(0.04,0.09,0.12,0.45),Color(0.5,0.85,0.8,0.65),70)); joy_base.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_base)
     joy_knob=Panel.new(); joy_knob.size=Vector2(58,58); joy_knob.add_theme_stylebox_override("panel",_style(Color(0.25,0.85,0.80,0.75),Color.WHITE,40)); joy_knob.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_knob)
-    fire=_btn(battle_ui,"ATIRAR",Vector2.ZERO,Vector2(112,112),Color(0.72,0.10,0.10)); reload=_btn(battle_ui,"RECARREGAR",Vector2.ZERO,Vector2(145,50),Color(0.16,0.28,0.36)); ability=_btn(battle_ui,"DRAGÃO",Vector2.ZERO,Vector2(155,58),Color(0.10,0.46,0.38)); medkit=_btn(battle_ui,"KIT +50",Vector2.ZERO,Vector2(105,48),Color(0.14,0.38,0.24)); aim=_btn(battle_ui,"MIRA",Vector2.ZERO,Vector2(82,48),Color(0.20,0.28,0.40))
+    fire=_btn(battle_ui,"ATIRAR",Vector2.ZERO,Vector2(112,112),Color(0.72,0.10,0.10)); switch_weapon=_btn(battle_ui,"TROCAR",Vector2.ZERO,Vector2(104,46),Color(0.24,0.30,0.42)); reload=_btn(battle_ui,"RECARREGAR",Vector2.ZERO,Vector2(145,50),Color(0.16,0.28,0.36)); ability=_btn(battle_ui,"DRAGÃO",Vector2.ZERO,Vector2(155,58),Color(0.10,0.46,0.38)); medkit=_btn(battle_ui,"KIT +50",Vector2.ZERO,Vector2(105,48),Color(0.14,0.38,0.24)); aim=_btn(battle_ui,"MIRA",Vector2.ZERO,Vector2(82,48),Color(0.20,0.28,0.40))
+    switch_weapon.pressed.connect(_switch_weapon)
     fire.button_down.connect(func(): fire_held=true; _shoot())
     fire.button_up.connect(func(): fire_held=false)
     reload.pressed.connect(_reload); ability.pressed.connect(_ability); medkit.pressed.connect(_medkit); aim.button_down.connect(func():camera.fov=48); aim.button_up.connect(func():camera.fov=72)
@@ -539,6 +541,7 @@ func _layout_battle() -> void:
     top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42)
     joy_base.position=Vector2(24,s.y-164); joy_knob.position=joy_base.position+Vector2(37,37)
     fire.position=Vector2(s.x-126,s.y-148)
+    switch_weapon.position=Vector2(s.x-250,s.y-218)
     reload.position=Vector2(s.x-274,s.y-66)
     ability.position=Vector2(s.x-292,s.y-132)
     medkit.position=Vector2(s.x-420,s.y-66)
@@ -651,6 +654,15 @@ func _shoot() -> void:
             if selected=="Cuíca" and ability_tick>0: dmg=34+kills*2
             bot_hp[id]=float(bot_hp.get(id,100))-dmg
             if bot_hp[id]<=0: kills+=1; coins+=10; bots.erase(obj); bot_hp.erase(id); bot_t.erase(id); obj.queue_free(); _toast("ELIMINAÇÃO +10 🪙")
+
+func _switch_weapon() -> void:
+    if weapon_catalog.is_empty(): return
+    var index=weapon_catalog.find(active_weapon)
+    active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
+    ammo=MAG
+    reload_tick=0.0
+    _hud()
+    _toast("ARMA: "+active_weapon)
 
 func _reload() -> void:
     if reload_tick<=0 and ammo<MAG: reload_tick=1.5; _toast("RECARREGANDO...")
