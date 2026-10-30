@@ -396,6 +396,7 @@ func _settings() -> void:
     var back:=_btn(ui,"← VOLTAR",Vector2(30,get_viewport().size.y-72),Vector2(150,50),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
 
 func _start() -> void:
+    fire_held=false
     mode = "battle"
     _reset_ui()
     _clear_world()
@@ -575,7 +576,7 @@ func _physics_process(delta:float) -> void:
     if reload_tick>0:
         reload_tick-=delta
         if reload_tick<=0:
-            ammo=MAG
+            ammo=_mag_size()
     if zone_tick>12:
         zone_tick=0
         zone=maxf(18,zone-1.6)
@@ -682,7 +683,7 @@ func _mag_size() -> int:
     return int(weapon_mag.get(active_weapon,MAG))
 
 func _switch_weapon() -> void:
-    if weapon_catalog.is_empty() or not is_instance_valid(player): return
+    if weapon_catalog.is_empty() or not is_instance_valid(player) or match_done: return
     var index=weapon_catalog.find(active_weapon)
     active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
     _refresh_weapon_model()
