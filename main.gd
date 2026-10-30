@@ -996,6 +996,12 @@ func _toggle_pause() -> void:
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player or match_done or match_paused: return
     if match_phase=="lobby_aircraft":
+        # O avião percorre o mapa durante o embarque; jogador e cabine viajam juntos.
+        var flight_step := Vector3(0.0, 0.0, -delta * 2.8)
+        player.global_position += flight_step
+        var aircraft := get_node_or_null("AircraftCabin")
+        if aircraft is Node3D:
+            aircraft.global_position += flight_step
         boarding_time=maxf(0.0,boarding_time-delta)
         if is_instance_valid(boarding_label):
             boarding_label.text="AGUARDE O SALTO  •  %02d" % int(ceil(boarding_time))
