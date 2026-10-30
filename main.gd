@@ -535,7 +535,20 @@ func _battle_ui() -> void:
 
 func _layout_battle() -> void:
     if not battle_ui: return
-    var s:=get_viewport().size; top_text.position=Vector2(s.x/2-160,18); zone_text.position=Vector2(s.x/2-160,48); joy_base.position=Vector2(28,s.y-174); joy_knob.position=joy_base.position+Vector2(37,37); fire.position=Vector2(s.x-135,s.y-160); reload.position=Vector2(s.x-305,s.y-74); ability.position=Vector2(s.x-310,s.y-142); medkit.position=Vector2(s.x-425,s.y-70); aim.position=Vector2(s.x-235,s.y-210)
+    var s:=get_viewport().get_visible_rect().size
+    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42)
+    joy_base.position=Vector2(24,s.y-164); joy_knob.position=joy_base.position+Vector2(37,37)
+    fire.position=Vector2(s.x-126,s.y-148)
+    reload.position=Vector2(s.x-274,s.y-66)
+    ability.position=Vector2(s.x-292,s.y-132)
+    medkit.position=Vector2(s.x-420,s.y-66)
+    aim.position=Vector2(s.x-218,s.y-194)
+    # Evita que os botoes laterais invadam o joystick em telas estreitas.
+    if s.x<760:
+        medkit.position.x=maxf(s.x*0.48, s.x-420)
+        reload.position.x=maxf(s.x*0.57, s.x-274)
+        ability.position.x=maxf(s.x*0.54, s.x-292)
+        aim.position.x=maxf(s.x*0.68, s.x-218)
 
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
