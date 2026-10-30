@@ -404,6 +404,7 @@ func _start() -> void:
     _build_map()
     _player()
     ammo=_mag_size()
+    reserve_ammo=120
     _battle_ui()
     _bots()
     _loot()
@@ -691,7 +692,8 @@ func _switch_weapon() -> void:
     var index=weapon_catalog.find(active_weapon)
     active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
     _refresh_weapon_model()
-    ammo=_mag_size()
+    ammo=mini(_mag_size(),reserve_ammo)
+    reserve_ammo-=ammo
     reload_tick=0.0
     _hud()
     _toast("ARMA: "+active_weapon)
