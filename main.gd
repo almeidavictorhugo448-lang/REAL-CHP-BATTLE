@@ -57,6 +57,8 @@ var kills := 0
 var matches_played := 0
 var wins := 0
 var losses := 0
+var total_kills := 0
+var best_kills := 0
 var coins := 250
 var time_left := START_TIME
 var zone := MAP
@@ -135,6 +137,8 @@ func _load_profile() -> void:
     matches_played = maxi(0, int(config.get_value("profile", "matches_played", matches_played)))
     wins = maxi(0, int(config.get_value("profile", "wins", wins)))
     losses = maxi(0, int(config.get_value("profile", "losses", losses)))
+    total_kills = maxi(0, int(config.get_value("profile", "total_kills", total_kills)))
+    best_kills = maxi(0, int(config.get_value("profile", "best_kills", best_kills)))
     var saved_character := String(config.get_value("profile", "selected", selected))
     if chars.has(saved_character):
         selected = saved_character
@@ -166,6 +170,8 @@ func _save_profile() -> void:
     config.set_value("profile", "matches_played", matches_played)
     config.set_value("profile", "wins", wins)
     config.set_value("profile", "losses", losses)
+    config.set_value("profile", "total_kills", total_kills)
+    config.set_value("profile", "best_kills", best_kills)
     config.set_value("profile", "selected", selected)
     config.set_value("profile", "skin", skin)
     config.set_value("profile", "active_weapon", active_weapon)
@@ -307,7 +313,7 @@ func _lobby() -> void:
     y += main_h + gap
     var settings := _btn(ui, "⚙  CONFIGURAÇÕES", Vector2(left, y), Vector2(button_width, main_h), Color(0.18, 0.21, 0.25))
     settings.pressed.connect(_settings)
-    var foot := _txt(ui, "PUNK V1  |  🪙 %d  |  PARTIDAS %d  V %d  D %d" % [coins,matches_played,wins,losses], Vector2(0, height - 30), Vector2(width, 24), 13)
+    var foot := _txt(ui, "PUNK V1  |  🪙 %d  |  PARTIDAS %d  V %d  D %d  KILLS %d  REC %d" % [coins,matches_played,wins,losses,total_kills,best_kills], Vector2(0, height - 30), Vector2(width, 24), 13)
     foot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func _wardrobe() -> void:
@@ -916,6 +922,7 @@ func _shoot() -> void:
     bot_hp[id]=float(bot_hp.get(id,100.0))-damage
     if bot_hp[id]<=0:
         kills+=1
+        total_kills+=1
         coins+=10
         _save_profile()
         _drop_death_loot(target.global_position,bot_inventory.get(id,{}))
@@ -1025,6 +1032,7 @@ func _end(win:bool)->void:
     if match_done: return
     match_done=true
     matches_played+=1
+    best_kills=maxi(best_kills,kills)
     if win:
         wins+=1
         coins+=100
@@ -1033,5 +1041,6 @@ func _end(win:bool)->void:
     _save_profile()
     var p:=Panel.new(); p.position=Vector2(get_viewport().size.x/2-190,get_viewport().size.y/2-145); p.size=Vector2(380,290); p.add_theme_stylebox_override("panel",_style(Color(0.015,0.03,0.05,0.98),Color(0.30,0.82,0.70),20)); battle_ui.add_child(p)
     var t:=_txt(p,"VITÓRIA!" if win else "ELIMINADO",Vector2(0,35),Vector2(380,50),30); t.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-    var s:=_txt(p,"Kills: %d\n🪙 %d"%[kills,coins],Vector2(0,100),Vector2(380,70),20); s.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+    var rate:=roundi(float(wins)*100.0/maxi(1,matches_played))
+    var s:=_txt(p,"Kills: %d  •  Recorde: %d\\nVitórias: %d/%d (%d%%)\\nKills totais: %d\\n🪙 %d"%[kills,best_kills,wins,matches_played,rate,total_kills,coins],Vector2(0,92),Vector2(380,105),17); s.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     var b:=_btn(p,"VOLTAR AO LOBBY",Vector2(75,205),Vector2(230,55)); b.pressed.connect(_lobby)
