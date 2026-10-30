@@ -598,7 +598,8 @@ func _characters() -> void:
     portrait.size=Vector2(150,194)
     portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
     portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_COVERED
-    portrait.texture=load("res://assets/skins/"+selected.to_lower()+".svg")
+    var portrait_key:String = String({"Kosmos":"kosmos","Lucas":"lucas","Cuíca":"cuica","Danilo":"danilo","Marli":"marli"}.get(selected,"kosmos"))
+    portrait.texture=load("res://assets/skins/"+portrait_key+".svg")
     portrait.modulate=Color(1.0,1.0,1.0) if skin=="Original" else (Color(0.78,0.90,1.0) if skin in ["Prata","Gelo"] else (Color(1.0,0.82,0.62) if skin in ["Fogo","Ouro","Dragão Negro"] else Color(0.90,0.76,1.0)))
     card.add_child(portrait)
     var nm:=_txt(card,selected,Vector2(190,28),Vector2(400,42),30); nm.add_theme_color_override("font_color",chars[selected]["color"])
