@@ -657,18 +657,22 @@ func _update_bots(delta:float) -> void:
         var dist:=v.length()
         if dist<32 and dist>5:
             var d:=Vector3(v.x,0,v.z).normalized()
-            var sp:=2.2
+            var sp:=2.8
             if selected=="Lucas" and ability_tick>0:
-                sp=1.0
+                sp=1.2
             b.velocity.x=d.x*sp
             b.velocity.z=d.z*sp
             b.rotation.y=atan2(-d.x,-d.z)
             b.move_and_slide()
         var id:=b.get_instance_id()
         bot_t[id]=float(bot_t.get(id,1.4))-delta
-        if dist<14 and float(bot_t[id])<=0:
-            bot_t[id]=randf_range(1.0,2.0)
-            _damage(5 if selected=="Marli" and ability_tick>0 else 9)
+        # Rivais conseguem atacar a uma distância maior; dano diminui de longe.
+        if dist<22 and float(bot_t[id])<=0:
+            bot_t[id]=randf_range(1.1,1.8)
+            var enemy_damage:=9.0 if dist<10 else 6.0
+            if selected=="Marli" and ability_tick>0:
+                enemy_damage*=0.55
+            _damage(enemy_damage)
 
 func _unhandled_input(e:InputEvent) -> void:
     if mode!="battle": return
