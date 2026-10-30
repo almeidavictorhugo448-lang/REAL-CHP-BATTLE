@@ -59,6 +59,7 @@ var zone := MAP
 var zone_tick := 0.0
 var shot_tick := 0.0
 var reload_tick := 0.0
+var reload_total := 0.0
 var ability_tick := 0.0
 var ability_cd := 0.0
 var medkits := 3
@@ -76,6 +77,7 @@ var ui: Control
 var battle_ui: Control
 var hp_text: Label
 var ammo_text: Label
+var reload_text: Label
 var top_text: Label
 var zone_text: Label
 var toast: Label
@@ -560,7 +562,7 @@ func _loot() -> void:
 
 func _battle_ui() -> void:
     battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui.add_child(battle_ui)
-    hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18)
+    hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18); reload_text=_txt(battle_ui,"",Vector2(0,0),Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false
     top_text=_txt(battle_ui,"",Vector2(0,18),Vector2(320,30),17); zone_text=_txt(battle_ui,"",Vector2(0,48),Vector2(320,28),15); top_text.position.x=get_viewport().size.x/2-160; zone_text.position.x=get_viewport().size.x/2-160; top_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; zone_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     joy_base=Panel.new(); joy_base.size=Vector2(132,132); joy_base.add_theme_stylebox_override("panel",_style(Color(0.04,0.09,0.12,0.45),Color(0.5,0.85,0.8,0.65),70)); joy_base.mouse_filter=Control.MOUSE_FILTER_IGNORE; battle_ui.add_child(joy_base)
@@ -576,7 +578,7 @@ func _battle_ui() -> void:
 func _layout_battle() -> void:
     if not battle_ui: return
     var s:=get_viewport().get_visible_rect().size
-    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42)
+    top_text.position=Vector2(s.x/2-160,12); zone_text.position=Vector2(s.x/2-160,42); reload_text.position=Vector2(s.x/2-130,s.y*0.68)
     joy_base.position=Vector2(24,s.y-164); joy_knob.position=joy_base.position+Vector2(37,37)
     fire.position=Vector2(s.x-126,s.y-148)
     switch_weapon.position=Vector2(s.x-250,s.y-218)
