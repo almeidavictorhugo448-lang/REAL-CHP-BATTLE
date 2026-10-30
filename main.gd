@@ -819,6 +819,21 @@ func _spawn_airdrop() -> void:
             var box:=box_mesh.mesh as BoxMesh
             if box:
                 box.material=_mat(Color(0.82,0.16,0.10))
+        var beacon:=MeshInstance3D.new()
+        beacon.name="Sinal_Vermelho"
+        var beam:=CylinderMesh.new()
+        beam.top_radius=0.10
+        beam.bottom_radius=0.22
+        beam.height=5.5
+        var glow:=StandardMaterial3D.new()
+        glow.albedo_color=Color(1.0,0.04,0.02,0.72)
+        glow.emission_enabled=true
+        glow.emission=Color(1.0,0.02,0.01)
+        glow.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
+        beacon.mesh=beam
+        beacon.material_override=glow
+        beacon.position=Vector3(0,3.0,0)
+        crate.add_child(beacon)
     _toast("🚁 SUPRIMENTO AÉREO CHEGOU! PROCURE O SINAL VERMELHO")
 
 func _drop_death_loot(spot:Vector3,contents:Dictionary) -> void:
