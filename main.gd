@@ -621,10 +621,17 @@ func _hud() -> void:
     ability.text="DRAGÃO %s"%(["PRONTO" if ability_cd<=0 else "%ds"%int(ceil(ability_cd))][0])
     ability.disabled=ability_cd>0
 func _toast(t:String)->void:
-    if not toast:
-        toast=_txt(battle_ui,"",Vector2(get_viewport().size.x/2-250,get_viewport().size.y*0.72),Vector2(500,40),20); toast.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-    toast.text=t; toast.modulate.a=1
-    var tw:=create_tween(); tw.tween_interval(1.0); tw.tween_property(toast,"modulate:a",0.0,0.6)
+    var parent:Control = battle_ui if battle_ui and is_instance_valid(battle_ui) else ui
+    if parent == null or not is_instance_valid(parent):
+        return
+    if toast == null or not is_instance_valid(toast):
+        toast = _txt(parent, "", Vector2(get_viewport().size.x/2-250, get_viewport().size.y*0.72), Vector2(500,40), 20)
+        toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    toast.text = t
+    toast.modulate.a = 1.0
+    var tw := create_tween()
+    tw.tween_interval(1.0)
+    tw.tween_property(toast, "modulate:a", 0.0, 0.6)
 func _end(win:bool)->void:
     match_done=true; if win: coins+=100
     var p:=Panel.new(); p.position=Vector2(get_viewport().size.x/2-190,get_viewport().size.y/2-145); p.size=Vector2(380,290); p.add_theme_stylebox_override("panel",_style(Color(0.015,0.03,0.05,0.98),Color(0.30,0.82,0.70),20)); battle_ui.add_child(p)
