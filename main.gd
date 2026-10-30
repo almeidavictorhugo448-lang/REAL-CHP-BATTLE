@@ -1231,14 +1231,29 @@ func _damage(amount:float) -> void:
     hp=maxf(0,hp-rest)
     if hp<=0 and not match_done: _end(false)
 func _pickup() -> void:
-    for a in loot.duplicate():
-        if not is_instance_valid(a):
-            loot.erase(a)
+    # Prioridade automática: cura, munição, proteção, gelo e energia.
+    var priority := {"KIT":0,"MUNIÇÃO":1,"COLETE":2,"GELO":3,"ENERGIA":4,"CAIXA":5}
+    var nearby:Array[Area3D]=[]
+    for item in loot.duplicate():
+        if not is_instance_valid(item):
+            loot.erase(item)
             continue
-        if player.global_position.distance_to(a.global_position)<1.7:
-            var k:String=a.get_meta("kind")
-            var amount := maxi(1,int(a.get_meta("amount",1)))
-            match k:
+        if player.global_position.distance_to(item.global_position)<1.7:
+            nearby.append(item)
+    nearby.sort_custom(func(a:Area3D,b:Area3D) -> bool:
+        var pa:=int(priority.get(String(a.get_meta("kind","")),99))
+        var pb:=int(priority.get(String(b.get_meta("kind","")),99))
+        if pa==pb:
+            return player.global_position.distance_squared_to(a.global_position)<player.global_position.distance_squared_to(b.global_position)
+        return pa<pb
+    )
+    if nearby.is_empty():
+        return
+    # Coleta apenas um objeto por atualização para respeitar a prioridade.
+    var a:Area3D=nearby[0]
+    var k:String=a.get_meta("kind")
+    var amount := maxi(1,int(a.get_meta("amount",1)))
+    match k:
                 "MUNIÇÃO": reserve_ammo=mini(240,reserve_ammo+amount)
                 "COLETE": shield=minf(90,shield+amount)
                 "KIT": medkits+=amount
