@@ -70,6 +70,8 @@ var ability_tick := 0.0
 var ability_cd := 0.0
 var medkits := 3
 var match_done := false
+var match_paused := false
+var pause_panel:Panel
 var match_phase := "lobby_aircraft"
 var boarding_time := 20.0
 var boarding_label:Label
@@ -513,6 +515,8 @@ func _start() -> void:
     fire_held=false
     aim_held=false
     match_done=false
+    match_paused=false
+    pause_panel=null
     match_phase="lobby_aircraft"
     boarding_time=20.0
     kills=0
@@ -807,7 +811,7 @@ func _battle_ui() -> void:
     fire.button_down.connect(func(): fire_held=true; _shoot())
     fire.button_up.connect(func(): fire_held=false)
     reload.pressed.connect(_reload); ability.pressed.connect(_ability); medkit.pressed.connect(_medkit); aim.button_down.connect(func():aim_held=true; current_scope="Ponto vermelho"; camera.fov=48); aim.button_up.connect(func():aim_held=false; camera.fov=72)
-    var leave:=_btn(battle_ui,"☰",Vector2(18,92),Vector2(52,48),Color(0.12,0.15,0.18)); leave.pressed.connect(_lobby)
+    var leave:=_btn(battle_ui,"Ⅱ",Vector2(18,92),Vector2(52,48),Color(0.12,0.15,0.18)); leave.pressed.connect(_toggle_pause)
     _layout_battle()
 
 func _layout_battle() -> void:
@@ -828,8 +832,29 @@ func _layout_battle() -> void:
         ability.position.x=maxf(s.x*0.54, s.x-292)
         aim.position.x=maxf(s.x*0.68, s.x-218)
 
+func _toggle_pause() -> void:
+    if mode!="battle" or match_done:
+        return
+    match_paused=not match_paused
+    if match_paused:
+        pause_panel=Panel.new()
+        pause_panel.position=Vector2(get_viewport().size.x/2-170,get_viewport().size.y/2-145)
+        pause_panel.size=Vector2(340,290)
+        pause_panel.add_theme_stylebox_override("panel",_style(Color(0.015,0.03,0.05,0.98),Color(0.25,0.85,0.75),18))
+        battle_ui.add_child(pause_panel)
+        var title:=_txt(pause_panel,"PARTIDA PAUSADA",Vector2(0,28),Vector2(340,44),25)
+        title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+        var resume:=_btn(pause_panel,"CONTINUAR",Vector2(45,100),Vector2(250,52),Color(0.08,0.48,0.34))
+        resume.pressed.connect(_toggle_pause)
+        var quit:=_btn(pause_panel,"SAIR PARA O LOBBY",Vector2(45,170),Vector2(250,52),Color(0.45,0.12,0.12))
+        quit.pressed.connect(_lobby)
+    else:
+        if is_instance_valid(pause_panel):
+            pause_panel.queue_free()
+        pause_panel=null
+
 func _physics_process(delta:float) -> void:
-    if mode!="battle" or not player or match_done: return
+    if mode!="battle" or not player or match_done or match_paused: return
     if match_phase=="lobby_aircraft":
         boarding_time=maxf(0.0,boarding_time-delta)
         if is_instance_valid(boarding_label):
