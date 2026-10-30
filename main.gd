@@ -70,6 +70,10 @@ var ability_tick := 0.0
 var ability_cd := 0.0
 var medkits := 3
 var match_done := false
+var match_phase := "lobby_aircraft"
+var boarding_time := 20.0
+var boarding_label:Label
+var jump_button:Button
 var yaw := 0.0
 var pitch := -0.18
 var recoil_kick := 0.0
@@ -509,6 +513,8 @@ func _start() -> void:
     fire_held=false
     aim_held=false
     match_done=false
+    match_phase="lobby_aircraft"
+    boarding_time=20.0
     kills=0
     hp=MAX_HP
     shield=0
@@ -535,8 +541,47 @@ func _start() -> void:
     _bots()
     _loot()
     _layout_battle()
+    _build_aircraft_lobby()
     _hud()
-    _toast("PARTIDA INICIADA — SOBREVIVA!")
+    _toast("EMBARQUE CONCLUÍDO — AGUARDE O SALTO")
+
+func _build_aircraft_lobby() -> void:
+    # Cabine simples do avião de transporte ao redor do jogador.
+    var cabin:=Node3D.new()
+    cabin.name="AircraftCabin"
+    cabin.position=player.global_position
+    add_child(cabin)
+    _box(cabin,Vector3(5.2,0.22,12.0),Vector3(0,-0.12,0),_mat(Color(0.12,0.15,0.19),0.55,0.45))
+    _box(cabin,Vector3(5.2,0.18,12.0),Vector3(0,3.1,0),_mat(Color(0.08,0.11,0.15),0.5,0.35))
+    for side in [-1.0,1.0]:
+        _box(cabin,Vector3(0.18,3.1,12.0),Vector3(side*2.55,1.45,0),_mat(Color(0.20,0.25,0.30),0.5,0.4))
+        for z in [-4.0,-1.5,1.0,3.5]:
+            _box(cabin,Vector3(0.08,1.0,1.5),Vector3(side*2.43,2.0,z),_mat(Color(0.12,0.42,0.58),0.25,0.25))
+    var title:=_txt(battle_ui,"AVIÃO DE TRANSPORTE",Vector2(0,90),Vector2(get_viewport().size.x,42),25)
+    title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_color_override("font_color",Color(0.35,0.92,1.0))
+    boarding_label=_txt(battle_ui,"DECOLAGEM EM 20",Vector2(0,140),Vector2(get_viewport().size.x,48),30)
+    boarding_label.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+    jump_button=_btn(battle_ui,"🪂  SALTAR DO AVIÃO",Vector2.ZERO,Vector2(250,58),Color(0.08,0.48,0.34))
+    jump_button.position=Vector2(get_viewport().size.x/2-125,get_viewport().size.y*0.72)
+    jump_button.disabled=true
+    jump_button.pressed.connect(_jump_from_aircraft)
+    for control in [fire,switch_weapon,reload,ability,medkit,aim,joy_base,joy_knob]:
+        control.visible=false
+
+func _jump_from_aircraft() -> void:
+    if match_phase!="ready_to_jump":
+        return
+    match_phase="airborne"
+    if is_instance_valid(jump_button): jump_button.queue_free()
+    if is_instance_valid(boarding_label): boarding_label.queue_free()
+    var cabin=get_node_or_null("AircraftCabin")
+    if cabin: cabin.queue_free()
+    player.global_position=Vector3(randf_range(-8.0,8.0),34.0,randf_range(-8.0,8.0))
+    player.velocity=Vector3(0,-2.0,0)
+    for control in [fire,switch_weapon,reload,ability,medkit,aim,joy_base,joy_knob]:
+        control.visible=true
+    _toast("SALTO! PROCURE EQUIPAMENTOS E SOBREVIVA")
 
 func _clear_world() -> void:
     if player and is_instance_valid(player): player.queue_free()
@@ -771,6 +816,17 @@ func _layout_battle() -> void:
 
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player or match_done: return
+    if match_phase=="lobby_aircraft":
+        boarding_time=maxf(0.0,boarding_time-delta)
+        if is_instance_valid(boarding_label):
+            boarding_label.text="AGUARDE O SALTO  •  %02d" % int(ceil(boarding_time))
+        if boarding_time<=0.0:
+            match_phase="ready_to_jump"
+            if is_instance_valid(boarding_label): boarding_label.text="PORTAS ABERTAS — ESCOLHA QUANDO SALTAR!"
+            if is_instance_valid(jump_button): jump_button.disabled=false
+        return
+    if match_phase=="ready_to_jump":
+        return
     shot_tick=maxf(0,shot_tick-delta)
     hit_marker_tick=maxf(0,hit_marker_tick-delta)
     if hit_marker_tick<=0:
