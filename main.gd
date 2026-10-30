@@ -730,6 +730,18 @@ func _shoot() -> void:
         damage*=maxf(0.35,1.0-origin.distance_to(target.global_position)/32.0)
     if selected=="Kosmos" and ability_tick>0: damage=39
     if selected=="Cuíca" and ability_tick>0: damage=34+kills*2
+    # Acerto na parte superior da cápsula causa dano crítico.
+    var impact:Vector3=hit.get("position",target.global_position)
+    var headshot:=impact.y>target.global_position.y+0.55
+    if headshot:
+        damage*=1.5
+        hit_marker.text="✕ HS"
+        hit_marker.add_theme_color_override("font_color",Color(1.0,0.78,0.12))
+        hit_marker_tick=0.35
+    else:
+        hit_marker.text="✕"
+        hit_marker.add_theme_color_override("font_color",Color(1.0,0.28,0.20))
+        hit_marker_tick=0.16
     bot_hp[id]=float(bot_hp.get(id,100.0))-damage
     if bot_hp[id]<=0:
         kills+=1
