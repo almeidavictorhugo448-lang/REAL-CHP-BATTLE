@@ -520,9 +520,9 @@ func _start() -> void:
     match_phase="lobby_aircraft"
     boarding_time=20.0
     kills=0
-    hp=MAX_HP
+    hp=_max_player_hp()
     shield=0
-    energy=0
+    energy=MAX_ENERGY
     medkits=3
     reserve_ammo=120
     ammo=_mag_size()
@@ -602,7 +602,16 @@ func _jump_from_aircraft() -> void:
     _toast("PARAQUEDAS ABERTO — USE O JOYSTICK PARA DIRECIONAR")
 
 func _clear_world() -> void:
-    if player and is_instance_valid(player): player.queue_free()
+    # Limpa também objetos temporários de fases interrompidas.
+    var cabin=get_node_or_null("AircraftCabin")
+    if cabin: cabin.queue_free()
+    if player and is_instance_valid(player):
+        var canopy=player.get_node_or_null("ParachuteCanopy")
+        if canopy: canopy.queue_free()
+        player.queue_free()
+    if pause_panel and is_instance_valid(pause_panel): pause_panel.queue_free()
+    pause_panel=null
+    match_paused=false
     for b in bots: if is_instance_valid(b): b.queue_free()
     for l in loot: if is_instance_valid(l): l.queue_free()
     bots.clear(); loot.clear(); bot_hp.clear(); bot_t.clear(); bot_inventory.clear()
