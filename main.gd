@@ -770,7 +770,7 @@ func _layout_battle() -> void:
         aim.position.x=maxf(s.x*0.68, s.x-218)
 
 func _physics_process(delta:float) -> void:
-    if mode!="battle" or not player: return
+    if mode!="battle" or not player or match_done: return
     shot_tick=maxf(0,shot_tick-delta)
     hit_marker_tick=maxf(0,hit_marker_tick-delta)
     if hit_marker_tick<=0:
