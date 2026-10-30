@@ -47,6 +47,7 @@ var bots: Array[CharacterBody3D] = []
 var bot_hp: Dictionary = {}
 var bot_t: Dictionary = {}
 var loot: Array[Area3D] = []
+var loot_clock := 0.0
 var hp := MAX_HP
 var shield := 0.0
 var energy := MAX_ENERGY
@@ -607,6 +608,12 @@ func _physics_process(delta:float) -> void:
     ability_tick=maxf(0,ability_tick-delta)
     time_left-=delta
     zone_tick+=delta
+    loot_clock+=delta
+    for i in range(loot.size()):
+        var drop:=loot[i]
+        if is_instance_valid(drop):
+            drop.position.y=0.55+sin(loot_clock*2.2+float(i))*0.12
+            drop.rotation.y+=delta*1.4
     energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
     if fire_held and reload_tick<=0:
