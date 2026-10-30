@@ -736,11 +736,11 @@ func _shoot() -> void:
     if headshot:
         damage*=1.5
         hit_marker.text="✕ HS"
-        hit_marker.add_theme_color_override("font_color",Color(1.0,0.78,0.12))
+        hit_marker.add_theme_color_override("font_color",Color(1.0,0.12,0.10))
         hit_marker_tick=0.35
     else:
         hit_marker.text="✕"
-        hit_marker.add_theme_color_override("font_color",Color(1.0,0.28,0.20))
+        hit_marker.add_theme_color_override("font_color",Color(1.0,0.82,0.08))
         hit_marker_tick=0.16
     bot_hp[id]=float(bot_hp.get(id,100.0))-damage
     if bot_hp[id]<=0:
