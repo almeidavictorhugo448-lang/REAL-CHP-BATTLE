@@ -65,6 +65,7 @@ var medkits := 3
 var match_done := false
 var yaw := 0.0
 var pitch := -0.18
+var recoil_kick := 0.0
 var joy_id := -1
 var joy_start := Vector2.ZERO
 var joy_pos := Vector2.ZERO
@@ -592,7 +593,7 @@ func _layout_battle() -> void:
 
 func _physics_process(delta:float) -> void:
     if mode!="battle" or not player: return
-    shot_tick=maxf(0,shot_tick-delta); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
+    shot_tick=maxf(0,shot_tick-delta); recoil_kick=maxf(0,recoil_kick-delta*0.045); ability_cd=maxf(0,ability_cd-delta); ability_tick=maxf(0,ability_tick-delta); time_left-=delta; zone_tick+=delta; energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
     if fire_held and reload_tick<=0:
         _shoot()
@@ -687,6 +688,15 @@ func _shoot() -> void:
         _reload()
         return
     shot_tick=float(weapon_cadence.get(active_weapon,0.13))
+    var kick:=0.012
+    match active_weapon:
+        "Águia do Deserto": kick=0.045
+        "M1014": kick=0.055
+        "MP40": kick=0.008
+        "XM8": kick=0.010
+    recoil_kick=minf(0.12,recoil_kick+kick)
+    pitch=clampf(pitch+kick,-0.82,0.28)
+    camera.rotation.x=pitch
     ammo-=1
     var origin:=camera.global_position
     var direction:Vector3=-camera.global_transform.basis.z
