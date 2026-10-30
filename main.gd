@@ -1507,26 +1507,55 @@ func _update_bots(delta:float) -> void:
         if not is_instance_valid(b):
             bots.erase(b)
             continue
-        var v: Vector3 = player.global_position - b.global_position
-        var dist: float = v.length()
-        if dist<32 and dist>5:
-            var d:=Vector3(v.x,0,v.z).normalized()
-            var sp:=2.8
-            if selected=="Lucas" and ability_tick>0:
-                sp=1.2
-            b.velocity.x=d.x*sp
-            b.velocity.z=d.z*sp
-            b.rotation.y=atan2(-d.x,-d.z)
-            b.move_and_slide()
         var id: int = b.get_instance_id()
-        bot_t[id]=float(bot_t.get(id,1.4))-delta
-        # Rivais conseguem atacar a uma distância maior; dano diminui de longe.
-        if dist<22 and float(bot_t[id])<=0:
-            bot_t[id]=randf_range(1.1,1.8)
-            var enemy_damage:=9.0 if dist<10 else 6.0
-            if selected=="Marli" and ability_tick>0:
-                enemy_damage*=0.55
-            _damage(enemy_damage)
+        var offset: Vector3 = player.global_position - b.global_position
+        var flat := Vector3(offset.x, 0.0, offset.z)
+        var dist: float = flat.length()
+        var to_player := flat.normalized() if dist > 0.01 else Vector3.ZERO
+
+        # IA simples de combate: aproxima, recua quando pressionada e muda
+        # ligeiramente de lado para não avançar em linha reta como um alvo parado.
+        if dist < 38.0 and dist > 0.01:
+            var strafe_sign := 1.0 if int(id % 2) == 0 else -1.0
+            var strafe := Vector3(-to_player.z, 0.0, to_player.x) * strafe_sign
+            var move_dir := Vector3.ZERO
+            if dist > 10.0:
+                move_dir = to_player * 0.82 + strafe * 0.38
+            elif dist < 6.5:
+                move_dir = -to_player + strafe * 0.28
+            else:
+                move_dir = strafe * 0.52
+            move_dir = move_dir.normalized()
+            var speed := 2.9
+            if selected == "Lucas" and ability_tick > 0:
+                speed = 1.45
+            b.velocity.x = move_dir.x * speed
+            b.velocity.z = move_dir.z * speed
+            b.rotation.y = atan2(-to_player.x, -to_player.z)
+            b.move_and_slide()
+        else:
+            b.velocity.x = move_toward(b.velocity.x, 0.0, delta * 5.0)
+            b.velocity.z = move_toward(b.velocity.z, 0.0, delta * 5.0)
+            b.move_and_slide()
+
+        bot_t[id] = float(bot_t.get(id, 1.4)) - delta
+        if dist >= 30.0 or float(bot_t[id]) > 0.0:
+            continue
+
+        # Paredes e construções bloqueiam o tiro dos rivais.
+        var eye := b.global_position + Vector3.UP * 1.15
+        var target := player.global_position + Vector3.UP * 0.95
+        var query := PhysicsRayQueryParameters3D.create(eye, target)
+        query.exclude = [b]
+        var sight := get_world_3d().direct_space_state.intersect_ray(query)
+        if sight.is_empty() or sight.get("collider") != player:
+            continue
+
+        bot_t[id] = randf_range(0.85, 1.45)
+        var enemy_damage := randf_range(5.0, 8.0) if dist < 12.0 else randf_range(3.0, 5.5)
+        if selected == "Marli" and ability_tick > 0:
+            enemy_damage *= 0.55
+        _damage(enemy_damage)
 
 func _unhandled_input(e:InputEvent) -> void:
     if mode!="battle": return
