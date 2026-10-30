@@ -73,6 +73,9 @@ var joy_start := Vector2.ZERO
 var joy_pos := Vector2.ZERO
 var look_id := -1
 var fire_held := false
+var aim_held := false
+var current_scope := "Geral"
+var sensitivities := {"Geral":100.0,"Ponto vermelho":95.0,"2x":90.0,"4x":80.0,"AWM":50.0,"Olhadinha":100.0}
 
 var ui: Control
 var battle_ui: Control
@@ -399,9 +402,26 @@ func _weapon_skin_action(sn: String) -> void:
 
 
 func _settings() -> void:
-    mode="settings"; _reset_ui(); _bg(Color(0.012,0.018,0.028)); _txt(ui,"CONFIGURAÇÕES",Vector2(28,25),Vector2(600,50),34); _txt(ui,"PUNK v1 • PROTÓTIPO 3D",Vector2(30,82),Vector2(500,30),18)
-    _txt(ui,"Câmera: terceira pessoa\nControles: joystick + arraste para mirar\nGráficos: compatibilidade mobile\nMapa: área aberta com casas, cobertura, árvores e loot",Vector2(30,140),Vector2(700,150),18)
-    var back:=_btn(ui,"← VOLTAR",Vector2(30,get_viewport().size.y-72),Vector2(150,50),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
+    mode="settings"; _reset_ui(); _bg(Color(0.012,0.018,0.028))
+    _txt(ui,"CONFIGURAÇÕES",Vector2(24,16),Vector2(600,44),30)
+    _txt(ui,"SENSIBILIDADE  •  AJUSTE DE 0 A 200",Vector2(26,62),Vector2(700,28),16)
+    var names := ["Geral","Ponto vermelho","2x","4x","AWM","Olhadinha"]
+    var width := get_viewport().get_visible_rect().size.x
+    for i in range(names.size()):
+        var name:String = names[i]
+        var y := 105.0 + i*66.0
+        var label := _txt(ui,name.to_upper()+"  •  "+str(int(sensitivities[name])),Vector2(26,y),Vector2(width-52,24),16)
+        var slider := HSlider.new()
+        slider.min_value=0; slider.max_value=200; slider.step=1; slider.value=sensitivities[name]
+        slider.position=Vector2(24,y+27); slider.size=Vector2(width-48,28)
+        slider.value_changed.connect(_set_sensitivity.bind(name,label))
+        ui.add_child(slider)
+    _txt(ui,"MIRA GRUDADA: assistência ao mirar nos rivais próximos",Vector2(26,510),Vector2(width-52,34),14)
+    var back:=_btn(ui,"← VOLTAR",Vector2(24,get_viewport().size.y-62),Vector2(150,46),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
+
+func _set_sensitivity(value:float,name:String,label:Label) -> void:
+    sensitivities[name]=value
+    label.text=name.to_upper()+"  •  "+str(int(value))
 
 func _start() -> void:
     fire_held=false
@@ -619,7 +639,7 @@ func _battle_ui() -> void:
     switch_weapon.pressed.connect(_switch_weapon)
     fire.button_down.connect(func(): fire_held=true; _shoot())
     fire.button_up.connect(func(): fire_held=false)
-    reload.pressed.connect(_reload); ability.pressed.connect(_ability); medkit.pressed.connect(_medkit); aim.button_down.connect(func():camera.fov=48); aim.button_up.connect(func():camera.fov=72)
+    reload.pressed.connect(_reload); ability.pressed.connect(_ability); medkit.pressed.connect(_medkit); aim.button_down.connect(func():aim_held=true; current_scope="Ponto vermelho"; camera.fov=48); aim.button_up.connect(func():aim_held=false; camera.fov=72)
     var leave:=_btn(battle_ui,"☰",Vector2(18,92),Vector2(52,48),Color(0.12,0.15,0.18)); leave.pressed.connect(_lobby)
     _layout_battle()
 
@@ -667,7 +687,7 @@ func _physics_process(delta:float) -> void:
     if zone_tick>12:
         zone_tick=0
         zone=maxf(18,zone-1.6)
-    _move(delta); _update_bots(delta); _pickup(); _hud()
+    _move(delta); _update_bots(delta); _aim_assist(delta); _pickup(); _hud()
     if player.global_position.length()>zone: _damage(5*delta)
     if time_left<=0 and not match_done: _end(true)
 
@@ -741,8 +761,32 @@ func _look(r:Vector2) -> void:
     if not player or not camera: return
     # Sensibilidade proporcional à escala da tela, com limite vertical para não inverter a câmera.
     var scale_factor=clampf(get_viewport().get_visible_rect().size.y/720.0,0.75,1.35)
-    yaw-=r.x*0.0036*scale_factor
-    pitch=clampf(pitch-r.y*0.0030*scale_factor,-0.82,0.28)
+    yaw-=r.x*0.0036*scale_factor*(sensitivities.get(current_scope,100.0)/100.0)
+    pitch=clampf(pitch-r.y*0.0030*scale_factor*(sensitivities.get(current_scope,100.0)/100.0),-0.82,0.28)
+    player.rotation.y=yaw
+    camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
+
+func _aim_assist(delta:float) -> void:
+    if not aim_held or bots.is_empty() or not is_instance_valid(camera): return
+    var forward:Vector3=-camera.global_transform.basis.z
+    var best:CharacterBody3D=null
+    var best_distance:=INF
+    for rival in bots:
+        if not is_instance_valid(rival): continue
+        var offset:Vector3=(rival.global_position+Vector3.UP*0.45)-camera.global_position
+        var distance:=offset.length()
+        if distance>32.0 or distance<0.1: continue
+        if forward.dot(offset.normalized())<0.78: continue
+        if distance<best_distance:
+            best=rival
+            best_distance=distance
+    if best==null: return
+    var to_target:Vector3=(best.global_position+Vector3.UP*0.45)-camera.global_position
+    var desired_yaw:=atan2(-to_target.x,-to_target.z)
+    var desired_pitch:=atan2(to_target.y,Vector2(to_target.x,to_target.z).length())
+    var strength:=clampf(delta*5.5,0.0,0.22)
+    yaw=lerp_angle(yaw,desired_yaw,strength)
+    pitch=lerpf(pitch,clampf(desired_pitch,-0.82,0.28),strength)
     player.rotation.y=yaw
     camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
 
