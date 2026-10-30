@@ -551,7 +551,7 @@ func _build_lobby_showcase() -> void:
     # Árvores retorcidas, lápides e abóboras.
     for side in [-1.0,1.0]:
         for i in range(4):
-            var tx := side*(13.0+float(i%2)*5.0)
+            var tx: float = float(side)*(13.0+float(i%2)*5.0)
             var tz := -7.0-float(i)*6.0
             var trunk := MeshInstance3D.new()
             var trunk_mesh := CylinderMesh.new()
