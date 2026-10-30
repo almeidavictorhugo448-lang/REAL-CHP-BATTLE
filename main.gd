@@ -190,11 +190,11 @@ func _load_profile() -> void:
     active_weapon = String(config.get_value("profile", "active_weapon", active_weapon))
     if not active_weapon in weapon_catalog:
         active_weapon = weapon_catalog[0]
-    var saved_wardrobe = config.get_value("profile", "wardrobe_equipped", wardrobe_equipped)
-    if saved_wardrobe is Dictionary:
+    var saved_royale = config.get_value("profile", "wardrobe_equipped", wardrobe_equipped)
+    if saved_royale is Dictionary:
         for category in wardrobe_categories:
-            if saved_wardrobe.has(category):
-                wardrobe_equipped[category] = String(saved_wardrobe[category])
+            if saved_royale.has(category):
+                wardrobe_equipped[category] = String(saved_royale[category])
     var saved_owned = config.get_value("profile", "weapon_skin_owned", weapon_skin_owned)
     if saved_owned is Dictionary:
         for weapon in weapon_catalog:
@@ -374,7 +374,7 @@ func _lobby() -> void:
         var b := _btn(ui,str(item[1])+"  "+str(item[0]),Vector2(left_x,side_y+i*(side_h+side_gap)),Vector2(150,side_h),Color(0.035,0.065,0.075,0.88))
         b.add_theme_font_size_override("font_size",14)
         if i == 2: b.pressed.connect(_characters)
-        elif i == 3: b.pressed.connect(_wardrobe)
+        elif i == 3: b.pressed.connect(_royale)
         else: b.pressed.connect(_royale)
 
     # Painel de modo no lado direito e botão de partida em destaque.
@@ -408,7 +408,7 @@ func _lobby() -> void:
     nav.add_theme_stylebox_override("panel",_style(Color(0.025,0.035,0.045,0.86),Color(0.32,0.39,0.40),0))
     ui.add_child(nav)
     var nav_names := ["INÍCIO","COLEÇÃO","PERSONAGEM","ARMAS"]
-    var nav_actions := [Callable(self,"_lobby"),Callable(self,"_wardrobe"),Callable(self,"_characters"),Callable(self,"_inventory")]
+    var nav_actions := [Callable(self,"_lobby"),Callable(self,"_royale"),Callable(self,"_characters"),Callable(self,"_inventory")]
     var nav_w:float = nav.size.x/float(nav_names.size())
     for i in range(nav_names.size()):
         var b := _btn(nav,nav_names[i],Vector2(i*nav_w+3,7),Vector2(nav_w-6,40),Color(0.08,0.12,0.14,0.92) if i==0 else Color(0.035,0.055,0.065,0.92))
