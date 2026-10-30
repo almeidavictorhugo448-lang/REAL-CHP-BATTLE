@@ -1543,11 +1543,11 @@ func _update_bots(delta:float) -> void:
             continue
 
         # Paredes e construções bloqueiam o tiro dos rivais.
-        var eye := b.global_position + Vector3.UP * 1.15
-        var target := player.global_position + Vector3.UP * 0.95
-        var query := PhysicsRayQueryParameters3D.create(eye, target)
+        var eye: Vector3 = b.global_position + Vector3.UP * 1.15
+        var target: Vector3 = player.global_position + Vector3.UP * 0.95
+        var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(eye, target)
         query.exclude = [b]
-        var sight := get_world_3d().direct_space_state.intersect_ray(query)
+        var sight: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
         if sight.is_empty() or sight.get("collider") != player:
             continue
 
