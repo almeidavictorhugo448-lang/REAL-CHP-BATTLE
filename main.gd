@@ -542,7 +542,7 @@ func _clear_world() -> void:
     if player and is_instance_valid(player): player.queue_free()
     for b in bots: if is_instance_valid(b): b.queue_free()
     for l in loot: if is_instance_valid(l): l.queue_free()
-    bots.clear(); loot.clear(); bot_hp.clear(); bot_t.clear()
+    bots.clear(); loot.clear(); bot_hp.clear(); bot_t.clear(); bot_inventory.clear()
     var map=get_node_or_null("Map"); if map: map.queue_free()
 
 func _build_map() -> void:
@@ -710,6 +710,13 @@ func _spawn_ground_loot(spot:Vector3,kind:String,amount:int) -> void:
     loot.append(a)
 
 func _drop_death_loot(spot:Vector3,contents:Dictionary) -> void:
+    var has_items:=false
+    for value in contents.values():
+        if int(value)>0:
+            has_items=true
+            break
+    if not has_items:
+        return
     var crate:=Area3D.new()
     crate.name="Caixa_de_Loot"
     crate.position=Vector3(spot.x,0.16,spot.z)
