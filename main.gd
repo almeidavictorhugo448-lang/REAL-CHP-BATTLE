@@ -45,6 +45,7 @@ var player: CharacterBody3D
 var camera: Camera3D
 var bots: Array[CharacterBody3D] = []
 var bot_hp: Dictionary = {}
+var bot_inventory: Dictionary = {}
 var bot_t: Dictionary = {}
 var loot: Array[Area3D] = []
 var hp := MAX_HP
@@ -553,38 +554,59 @@ func _bots() -> void:
         var b:=CharacterBody3D.new(); b.name="Rival_%02d"%(i+1); b.position=points[i]; add_child(b)
         var c:=CollisionShape3D.new(); var s:=CapsuleShape3D.new(); s.height=1.8; s.radius=0.36; c.shape=s; b.add_child(c)
         var m:=MeshInstance3D.new(); var bm:=CapsuleMesh.new(); bm.height=1.5; bm.radius=0.37; bm.material=_mat([Color(0.78,0.14,0.10),Color(0.85,0.42,0.08),Color(0.58,0.15,0.30)][i%3]); m.mesh=bm; m.position.y=0.04; b.add_child(m)
-        bot_hp[b.get_instance_id()]=100.0; bot_t[b.get_instance_id()]=randf_range(0.7,2.0); bots.append(b)
+        var bot_id:=b.get_instance_id()
+        bot_hp[bot_id]=100.0
+        bot_inventory[bot_id]={"MUNIÇÃO":randi_range(0,60),"KIT":randi_range(0,2),"COLETE":randi_range(0,1),"GELO":randi_range(0,2),"ENERGIA":randi_range(0,2)}
+        bot_t[bot_id]=randf_range(0.7,2.0)
+        bots.append(b)
 
 func _loot() -> void:
     var kinds=["MUNIÇÃO","COLETE","KIT","GELO","ENERGIA"]
-    # Pontos fixos de saque: dentro das construções e junto a coberturas.
-    var spots=[
-        Vector3(-34,0.0,-31),Vector3(-30,0.0,-27),Vector3(-25,0.0,-32),
-        Vector3(29,0.0,-34),Vector3(34,0.0,-29),Vector3(25,0.0,-27),
-        Vector3(-36,0.0,22),Vector3(-31,0.0,27),Vector3(-27,0.0,21),
-        Vector3(30,0.0,25),Vector3(35,0.0,30),Vector3(25,0.0,34),
-        Vector3(-8,0.0,-8),Vector3(8,0.0,8),Vector3(0,0.0,34),
-        Vector3(0,0.0,-37),Vector3(40,0.0,0),Vector3(-40,0.0,0)
-    ]
+    var spots=[Vector3(-34,0,-31),Vector3(-30,0,-27),Vector3(-25,0,-32),Vector3(29,0,-34),Vector3(34,0,-29),Vector3(25,0,-27),Vector3(-36,0,22),Vector3(-31,0,27),Vector3(-27,0,21),Vector3(30,0,25),Vector3(35,0,30),Vector3(25,0,34),Vector3(-8,0,-8),Vector3(8,0,8),Vector3(0,0,34),Vector3(0,0,-37),Vector3(40,0,0),Vector3(-40,0,0)]
     for i in range(spots.size()):
-        var a:=Area3D.new()
-        a.name="Loot_%02d"%i
-        a.position=spots[i]+Vector3(0,0.32,0)
-        a.set_meta("kind",kinds[i%kinds.size()])
-        add_child(a)
-        var c:=CollisionShape3D.new()
-        var shape:=SphereShape3D.new()
-        shape.radius=1.2
-        c.shape=shape
-        a.add_child(c)
-        var m:=MeshInstance3D.new()
-        var sm:=BoxMesh.new()
-        sm.size=Vector3(0.48,0.18,0.32)
-        sm.material=_mat([Color(0.95,0.75,0.10),Color(0.20,0.55,0.95),Color(0.15,0.80,0.35),Color(0.20,0.90,0.90),Color(0.70,0.25,0.95)][i%5],0.35,0.15)
-        m.mesh=sm
-        m.position.y=-0.12
-        a.add_child(m)
-        loot.append(a)
+        _spawn_ground_loot(spots[i],kinds[i%kinds.size()],1)
+
+func _spawn_ground_loot(spot:Vector3,kind:String,amount:int) -> void:
+    if amount<=0: return
+    var a:=Area3D.new()
+    a.name="Loot_"+kind
+    a.position=Vector3(spot.x,0.10,spot.z)
+    a.set_meta("kind",kind)
+    a.set_meta("amount",amount)
+    add_child(a)
+    var c:=CollisionShape3D.new()
+    var shape:=SphereShape3D.new()
+    shape.radius=1.0
+    c.shape=shape
+    a.add_child(c)
+    var m:=MeshInstance3D.new()
+    var mesh:=BoxMesh.new()
+    mesh.size=Vector3(0.24,0.07,0.12) if kind=="MUNIÇÃO" else Vector3(0.30,0.10,0.24)
+    mesh.material=_mat({"MUNIÇÃO":Color(0.95,0.72,0.12),"COLETE":Color(0.18,0.48,0.92),"KIT":Color(0.12,0.82,0.30),"GELO":Color(0.20,0.88,1.0),"ENERGIA":Color(0.72,0.25,0.95)}.get(kind,Color.WHITE))
+    m.mesh=mesh
+    m.position.y=-0.035
+    a.add_child(m)
+    loot.append(a)
+
+func _drop_death_loot(spot:Vector3,contents:Dictionary) -> void:
+    var crate:=Area3D.new()
+    crate.name="Caixa_de_Loot"
+    crate.position=Vector3(spot.x,0.16,spot.z)
+    crate.set_meta("contents",contents.duplicate(true))
+    crate.set_meta("kind","CAIXA")
+    add_child(crate)
+    var c:=CollisionShape3D.new()
+    var shape:=SphereShape3D.new()
+    shape.radius=1.35
+    c.shape=shape
+    crate.add_child(c)
+    var m:=MeshInstance3D.new()
+    var box:=BoxMesh.new()
+    box.size=Vector3(0.62,0.30,0.46)
+    box.material=_mat(Color(0.48,0.30,0.12))
+    m.mesh=box
+    crate.add_child(m)
+    loot.append(crate)
 
 func _battle_ui() -> void:
     battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui.add_child(battle_ui)
@@ -774,6 +796,8 @@ func _shoot() -> void:
     if bot_hp[id]<=0:
         kills+=1
         coins+=10
+        _drop_death_loot(target.global_position,bot_inventory.get(id,{}))
+        bot_inventory.erase(id)
         bots.erase(target)
         bot_hp.erase(id)
         bot_t.erase(id)
@@ -839,7 +863,17 @@ func _pickup() -> void:
                 "KIT": medkits+=1
                 "GELO": shield=minf(90,shield+20)
                 "ENERGIA": energy=minf(MAX_ENERGY,energy+70)
-            loot.erase(a); a.queue_free(); _toast("PEGOU "+k)
+                "CAIXA":
+                    var contents:Dictionary=a.get_meta("contents",{})
+                    for item in contents:
+                        var count:=int(contents[item])
+                        match String(item):
+                            "MUNIÇÃO": reserve_ammo=min(240,reserve_ammo+count)
+                            "COLETE": shield=minf(90,shield+count*35)
+                            "KIT": medkits+=count
+                            "GELO": shield=minf(90,shield+count*20)
+                            "ENERGIA": energy=minf(MAX_ENERGY,energy+count*35)
+            loot.erase(a); a.queue_free(); _toast("PEGOU "+("CAIXA DE LOOT" if k=="CAIXA" else k))
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
     ammo_text.text="%s • %s  %02d/%02d  |  RES %03d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size(),reserve_ammo]
