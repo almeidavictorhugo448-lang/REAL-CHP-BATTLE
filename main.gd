@@ -262,19 +262,21 @@ func _reset_ui() -> void:
     add_child(layer)
     ui = Control.new()
     ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    ui.mouse_filter = Control.MOUSE_FILTER_STOP
+    ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
     layer.add_child(ui)
 
 func _bg(color:Color) -> ColorRect:
     var c := ColorRect.new()
     c.color = color
     c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    c.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ui.add_child(c)
     return c
 
 func _txt(parent:Control, text:String, pos:Vector2, size:Vector2, font:=20) -> Label:
     var l := Label.new()
     l.text=text; l.position=pos; l.size=size
+    l.mouse_filter = Control.MOUSE_FILTER_IGNORE
     l.add_theme_font_size_override("font_size",font)
     l.add_theme_color_override("font_color",Color.WHITE)
     l.add_theme_color_override("font_shadow_color",Color(0,0,0,0.9))
@@ -880,7 +882,7 @@ func _drop_death_loot(spot:Vector3,contents:Dictionary) -> void:
     loot.append(crate)
 
 func _battle_ui() -> void:
-    battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); ui.add_child(battle_ui)
+    battle_ui=Control.new(); battle_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); battle_ui.mouse_filter=Control.MOUSE_FILTER_IGNORE; ui.add_child(battle_ui)
     hp_text=_txt(battle_ui,"",Vector2(18,18),Vector2(700,35),18); ammo_text=_txt(battle_ui,"",Vector2(18,52),Vector2(350,30),18); reload_text=_txt(battle_ui,"",Vector2.ZERO,Vector2(260,28),16); reload_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; reload_text.visible=false
     top_text=_txt(battle_ui,"",Vector2(0,18),Vector2(320,30),17); zone_text=_txt(battle_ui,"",Vector2(0,48),Vector2(320,28),15); top_text.position.x=get_viewport().size.x/2-160; zone_text.position.x=get_viewport().size.x/2-160; top_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; zone_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     var cross:=_txt(battle_ui,"+",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); cross.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; hit_marker=_txt(battle_ui,"",Vector2(get_viewport().size.x/2-20,get_viewport().size.y/2-22),Vector2(40,40),30); hit_marker.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER; hit_marker.add_theme_color_override("font_color",Color(1.0,0.28,0.20)); hit_marker.visible=false
@@ -930,15 +932,27 @@ func _deploy_gloo_wall() -> void:
     wall.rotation.y = player.rotation.y
     add_child(wall)
     var mesh := MeshInstance3D.new()
-    var slab := BoxMesh.new()
-    slab.size = Vector3(4.2, 2.3, 0.35)
-    slab.material = _mat(Color(0.22, 0.78, 0.91, 0.82), 0.24, 0.18)
+    var slab := SphereMesh.new()
+    slab.radius = 1.0
+    slab.height = 2.0
+    slab.radial_segments = 32
+    slab.rings = 16
+    var ice := StandardMaterial3D.new()
+    ice.albedo_color = Color(0.88, 0.97, 1.0, 0.94)
+    ice.roughness = 0.18
+    ice.metallic = 0.08
+    ice.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    ice.clearcoat_enabled = true
+    ice.clearcoat = 0.7
+    slab.material = ice
     mesh.mesh = slab
+    mesh.scale = Vector3(2.1, 1.15, 0.22)
     wall.add_child(mesh)
     var collision := CollisionShape3D.new()
-    var shape := BoxShape3D.new()
-    shape.size = slab.size
+    var shape := SphereShape3D.new()
+    shape.radius = 1.0
     collision.shape = shape
+    collision.scale = Vector3(2.1, 1.15, 0.30)
     wall.add_child(collision)
     active_gloo_walls.append(wall)
     gloo_button.text = "GELO %d" % gloo_charges
