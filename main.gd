@@ -6,7 +6,7 @@ extends Node3D
 const MAX_HP := 200.0
 const MAX_ENERGY := 200.0
 const MAG := 30
-const MAP := 52.0
+const MAP := 210.0
 const START_TIME := 420.0
 
 var mode := "lobby"
@@ -616,7 +616,7 @@ func _jump_from_aircraft() -> void:
     if is_instance_valid(boarding_label): boarding_label.queue_free()
     var cabin=get_node_or_null("AircraftCabin")
     if cabin: cabin.queue_free()
-    player.global_position=Vector3(randf_range(-8.0,8.0),34.0,randf_range(-8.0,8.0))
+    player.global_position=Vector3(randf_range(-185.0,185.0),34.0,randf_range(-185.0,185.0))
     player.velocity=Vector3(0,-1.0,0)
     var canopy:=MeshInstance3D.new()
     canopy.name="ParachuteCanopy"
@@ -653,22 +653,121 @@ func _clear_world() -> void:
     var map=get_node_or_null("Map"); if map: map.queue_free()
 
 func _build_map() -> void:
-    var map:=Node3D.new(); map.name="Map"; add_child(map)
-    var floor:=StaticBody3D.new(); map.add_child(floor)
-    var pm:=PlaneMesh.new(); pm.size=Vector2(112,112); pm.material=_mat(Color(0.16,0.30,0.17)); var p:=MeshInstance3D.new(); p.mesh=pm; floor.add_child(p)
-    var cc:=CollisionShape3D.new(); var cs:=BoxShape3D.new(); cs.size=Vector3(112,0.4,112); cc.shape=cs; cc.position.y=-0.2; floor.add_child(cc)
-    _box(map,Vector3(13,0.04,105),Vector3(0,0.02,0),_mat(Color(0.13,0.14,0.15)))
-    for z in range(-48,49,8): _box(map,Vector3(0.18,0.05,3.2),Vector3(0,0.05,z),_mat(Color(0.90,0.78,0.32)))
-    var houses=[[Vector3(-19,0,-21),Vector3(11,5,9),Color(0.67,0.56,0.40),Color(0.28,0.12,0.10)],[Vector3(20,0,-28),Vector3(12,5,10),Color(0.57,0.64,0.67),Color(0.17,0.24,0.29)],[Vector3(-29,0,13),Vector3(10,4,9),Color(0.72,0.58,0.39),Color(0.40,0.18,0.10)],[Vector3(27,0,18),Vector3(12,5,10),Color(0.52,0.65,0.55),Color(0.22,0.18,0.15)],[Vector3(4,0,-42),Vector3(14,5,9),Color(0.52,0.56,0.63),Color(0.18,0.20,0.24)],[Vector3(-5,0,34),Vector3(10,4,8),Color(0.74,0.51,0.31),Color(0.36,0.13,0.10)]]
-    for h in houses: _house(map,h[0],h[1],h[2],h[3])
-    var walls=[[Vector3(-8,0.8,3),Vector3(8,1.6,0.7)],[Vector3(11,0.8,10),Vector3(0.7,1.6,10)],[Vector3(7,0.8,-13),Vector3(10,1.6,0.7)],[Vector3(-32,0.8,-4),Vector3(0.7,1.6,10)],[Vector3(31,0.8,-8),Vector3(8,1.6,0.7)],[Vector3(0,0.8,22),Vector3(10,1.6,0.7)]]
-    for w in walls: _wall(map,w[0],w[1])
-    for i in range(55):
-        var pos:=Vector3(randf_range(-47,47),0,randf_range(-48,48))
-        if abs(pos.x)<9 and abs(pos.z)<14: continue
-        if randf()<0.72: _tree(map,pos)
-        else: _crate(map,pos,randf_range(0.8,1.5))
-    _wall(map,Vector3(-54,1,0),Vector3(1.2,2,110)); _wall(map,Vector3(54,1,0),Vector3(1.2,2,110)); _wall(map,Vector3(0,1,-54),Vector3(110,2,1.2)); _wall(map,Vector3(0,1,54),Vector3(110,2,1.2))
+    # Ilha PUNK: mapa 420 x 420, com nove áreas urbanas e estradas conectando as cidades.
+    var map:=Node3D.new()
+    map.name="Map"
+    add_child(map)
+
+    var floor:=StaticBody3D.new()
+    floor.name="Terrain"
+    map.add_child(floor)
+    var pm:=PlaneMesh.new()
+    pm.size=Vector2(420,420)
+    pm.subdivide_width=32
+    pm.subdivide_depth=32
+    pm.material=_mat(Color(0.19,0.34,0.19))
+    var ground:=MeshInstance3D.new()
+    ground.mesh=pm
+    floor.add_child(ground)
+    var ground_collision:=CollisionShape3D.new()
+    var ground_shape:=BoxShape3D.new()
+    ground_shape.size=Vector3(420,0.5,420)
+    ground_collision.shape=ground_shape
+    ground_collision.position.y=-0.25
+    floor.add_child(ground_collision)
+
+    # Rodovias principais e vias secundárias.
+    var asphalt:=_mat(Color(0.105,0.12,0.13),0.94)
+    var road_line:=_mat(Color(0.94,0.78,0.28),0.6)
+    _box(map,Vector3(15,0.045,410),Vector3.ZERO,asphalt)
+    _box(map,Vector3(410,0.045,15),Vector3.ZERO,asphalt)
+    for z in range(-198,199,12):
+        _box(map,Vector3(0.22,0.055,5.0),Vector3(0,0.06,z),road_line)
+    for x in range(-198,199,12):
+        _box(map,Vector3(5.0,0.055,0.22),Vector3(x,0.06,0),road_line)
+
+    # Cidades e locais de pouso distribuídos por toda a ilha.
+    var towns=[
+        {"name":"NOVA AURORA","pos":Vector2(-145,-145),"wall":Color(0.68,0.62,0.49),"roof":Color(0.30,0.16,0.13)},
+        {"name":"PORTO BRAVO","pos":Vector2(0,-155),"wall":Color(0.54,0.66,0.69),"roof":Color(0.13,0.24,0.31)},
+        {"name":"VALE VERDE","pos":Vector2(145,-145),"wall":Color(0.57,0.68,0.49),"roof":Color(0.22,0.28,0.15)},
+        {"name":"VILA RUBRA","pos":Vector2(-155,0),"wall":Color(0.72,0.51,0.39),"roof":Color(0.38,0.14,0.11)},
+        {"name":"CENTRO PUNK","pos":Vector2(0,0),"wall":Color(0.57,0.61,0.67),"roof":Color(0.12,0.15,0.22)},
+        {"name":"CIDADE ALTA","pos":Vector2(155,0),"wall":Color(0.64,0.62,0.52),"roof":Color(0.25,0.20,0.15)},
+        {"name":"SANTA NEVE","pos":Vector2(-145,145),"wall":Color(0.67,0.73,0.76),"roof":Color(0.22,0.32,0.39)},
+        {"name":"DESERTO 9","pos":Vector2(0,155),"wall":Color(0.76,0.62,0.40),"roof":Color(0.43,0.25,0.13)},
+        {"name":"BAÍA SOMBRIA","pos":Vector2(145,145),"wall":Color(0.48,0.59,0.59),"roof":Color(0.12,0.19,0.23)}
+    ]
+    for town in towns:
+        _build_town(map,town["name"],town["pos"],town["wall"],town["roof"])
+
+    # Vilarejos menores e postos de combate entre as cidades.
+    var outposts=[Vector2(-75,-90),Vector2(78,-85),Vector2(-82,82),Vector2(82,88),Vector2(0,-78),Vector2(-78,0),Vector2(78,0),Vector2(0,82)]
+    for i in range(outposts.size()):
+        var center:=Vector3(outposts[i].x,0,outposts[i].y)
+        for j in range(3):
+            var offset:=Vector3(float(j-1)*8.0,0,float((j%2)*9-4))
+            _house(map,center+offset,Vector3(7.0,3.8,6.5),Color(0.56,0.57,0.49),Color(0.24,0.20,0.16))
+
+    # Vegetação e cobertura em áreas rurais, sem bloquear os centros das cidades.
+    for i in range(360):
+        var pos:=Vector3(randf_range(-202,202),0,randf_range(-202,202))
+        var near_road:=abs(pos.x)<10.0 or abs(pos.z)<10.0
+        var near_town:=false
+        for town in towns:
+            var c:Vector2=town["pos"]
+            if Vector2(pos.x,pos.z).distance_to(c)<25.0:
+                near_town=true
+                break
+        if near_road or near_town:
+            continue
+        if randf()<0.78:
+            _tree(map,pos)
+        else:
+            _crate(map,pos,randf_range(0.8,1.7))
+
+    # Limites físicos da ilha.
+    _wall(map,Vector3(-210,1,0),Vector3(1.5,2.5,420))
+    _wall(map,Vector3(210,1,0),Vector3(1.5,2.5,420))
+    _wall(map,Vector3(0,1,-210),Vector3(420,2.5,1.5))
+    _wall(map,Vector3(0,1,210),Vector3(420,2.5,1.5))
+
+func _build_town(parent:Node3D,town_name:String,center:Vector2,wall_color:Color,roof_color:Color)->void:
+    var town:=Node3D.new()
+    town.name=town_name.replace(" ","_")
+    town.position=Vector3(center.x,0,center.y)
+    parent.add_child(town)
+
+    # Placa de identificação visível durante a aproximação.
+    var sign:=Label3D.new()
+    sign.text=town_name
+    sign.position=Vector3(0,11,0)
+    sign.font_size=52
+    sign.pixel_size=0.012
+    sign.billboard=BaseMaterial3D.BILLBOARD_ENABLED
+    sign.modulate=Color(0.9,0.96,1.0)
+    town.add_child(sign)
+
+    var road_mat:=_mat(Color(0.12,0.13,0.14),0.95)
+    _box(town,Vector3(8,0.04,62),Vector3.ZERO,road_mat)
+    _box(town,Vector3(62,0.04,8),Vector3.ZERO,road_mat)
+
+    var positions=[
+        Vector3(-19,0,-18),Vector3(18,0,-19),Vector3(-19,0,18),Vector3(19,0,18),
+        Vector3(-34,0,0),Vector3(34,0,0),Vector3(0,0,-34),Vector3(0,0,34)
+    ]
+    for i in range(positions.size()):
+        var pos:Vector3=positions[i]
+        var height:=randf_range(4.0,7.0) if i<4 else randf_range(3.5,5.0)
+        var size:=Vector3(randf_range(8.0,11.0),height,randf_range(8.0,11.0))
+        var roof:=roof_color.lerp(Color(0.12,0.15,0.19),randf_range(0.0,0.22))
+        _house(town,pos,size,wall_color,roof)
+        if i%2==0:
+            _crate(town,pos+Vector3(6,0,5),1.3)
+
+    # Torres, postes e caixas dão silhueta própria a cada região.
+    _box(town,Vector3(2.2,13.0,2.2),Vector3(-27,6.5,-27),_mat(Color(0.25,0.30,0.34),0.45,0.35))
+    _box(town,Vector3(5.0,0.8,5.0),Vector3(-27,13.2,-27),_mat(Color(0.85,0.55,0.16),0.35,0.3))
 
 func _mat(c:Color,r:=0.8,m:=0.0)->StandardMaterial3D:
     var x:=StandardMaterial3D.new(); x.albedo_color=c; x.roughness=r; x.metallic=m; return x
@@ -778,7 +877,7 @@ func _player() -> void:
     hp=chars[selected]["hp"]; shield=0; energy=MAX_ENERGY; ammo=_mag_size(); kills=0; time_left=START_TIME; zone=MAP; zone_tick=0; ability_cd=0; ability_tick=0; medkits=3; match_done=false
 
 func _bots() -> void:
-    var points=[Vector3(-13,1,-9),Vector3(14,1,-13),Vector3(-34,1,18),Vector3(31,1,24),Vector3(7,1,-32),Vector3(-29,1,-29),Vector3(36,1,-15),Vector3(2,1,38),Vector3(22,1,3),Vector3(-20,1,31),Vector3(40,1,5),Vector3(-40,1,2)]
+    var points=[Vector3(-145,1,-145),Vector3(0,1,-155),Vector3(145,1,-145),Vector3(-155,1,0),Vector3(0,1,0),Vector3(155,1,0),Vector3(-145,1,145),Vector3(0,1,155),Vector3(145,1,145),Vector3(-75,1,-90),Vector3(78,1,88),Vector3(82,1,-85)]
     for i in range(points.size()):
         var b:=CharacterBody3D.new(); b.name="Rival_%02d"%(i+1); b.position=points[i]; add_child(b)
         var c:=CollisionShape3D.new(); var s:=CapsuleShape3D.new(); s.height=1.8; s.radius=0.36; c.shape=s; b.add_child(c)
@@ -791,7 +890,7 @@ func _bots() -> void:
 
 func _loot() -> void:
     var kinds=["MUNIÇÃO","COLETE","KIT","GELO","ENERGIA"]
-    var spots=[Vector3(-34,0,-31),Vector3(-30,0,-27),Vector3(-25,0,-32),Vector3(29,0,-34),Vector3(34,0,-29),Vector3(25,0,-27),Vector3(-36,0,22),Vector3(-31,0,27),Vector3(-27,0,21),Vector3(30,0,25),Vector3(35,0,30),Vector3(25,0,34),Vector3(-8,0,-8),Vector3(8,0,8),Vector3(0,0,34),Vector3(0,0,-37),Vector3(40,0,0),Vector3(-40,0,0)]
+    var spots=[Vector3(-145,0,-145),Vector3(-137,0,-151),Vector3(-155,0,-137),Vector3(0,0,-155),Vector3(9,0,-148),Vector3(-8,0,-164),Vector3(145,0,-145),Vector3(153,0,-139),Vector3(137,0,-153),Vector3(-155,0,0),Vector3(-147,0,8),Vector3(-163,0,-7),Vector3(0,0,0),Vector3(8,0,7),Vector3(-8,0,-8),Vector3(155,0,0),Vector3(147,0,8),Vector3(163,0,-7),Vector3(-145,0,145),Vector3(0,0,155),Vector3(145,0,145),Vector3(-75,0,-90),Vector3(78,0,-85),Vector3(-82,0,82),Vector3(82,0,88)]
     for i in range(spots.size()):
         var kind:String = kinds[i%kinds.size()]
         var amount := 30 if kind=="MUNIÇÃO" else (35 if kind=="COLETE" else (1 if kind=="KIT" else (20 if kind=="GELO" else 70)))
@@ -820,7 +919,7 @@ func _spawn_ground_loot(spot:Vector3,kind:String,amount:int) -> void:
     loot.append(a)
 
 func _spawn_airdrop() -> void:
-    var spots=[Vector3(-30,0,-20),Vector3(28,0,-24),Vector3(-26,0,27),Vector3(30,0,28),Vector3(0,0,0)]
+    var spots=[Vector3(-145,0,-145),Vector3(0,0,-155),Vector3(145,0,-145),Vector3(-155,0,0),Vector3(0,0,0),Vector3(155,0,0),Vector3(-145,0,145),Vector3(0,0,155),Vector3(145,0,145)]
     var spot:Vector3=spots[randi_range(0,spots.size()-1)]
     _drop_death_loot(spot,{"MUNIÇÃO":90,"KIT":2,"COLETE":2,"GELO":4,"ENERGIA":100})
     var crate:Area3D=null
