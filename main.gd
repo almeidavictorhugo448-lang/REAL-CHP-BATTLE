@@ -342,78 +342,81 @@ func _lobby() -> void:
     _build_lobby_showcase()
     _reset_ui()
     var viewport_size := get_viewport().get_visible_rect().size
-    var width := viewport_size.x
-    var height := viewport_size.y
-    _bg(Color(0.025, 0.035, 0.045, 0.88))
-    # Faixa superior de perfil e moedas.
+    var width:float = viewport_size.x
+    var height:float = viewport_size.y
+    _bg(Color(0.025, 0.035, 0.045, 0.10))
+
+    # Barra superior: perfil, nível e moedas.
     var top := Panel.new()
     top.position = Vector2(0, 0)
-    top.size = Vector2(width, 62)
-    top.add_theme_stylebox_override("panel", _style(Color(0.025,0.035,0.045,0.94), Color(0.55,0.42,0.18), 0))
+    top.size = Vector2(width, 58)
+    top.add_theme_stylebox_override("panel", _style(Color(0.025,0.035,0.045,0.90), Color(0.70,0.49,0.20), 0))
     ui.add_child(top)
-    _txt(top, "PUNK", Vector2(24,10), Vector2(170,42), 30).add_theme_color_override("font_color", Color(1.0,0.78,0.30))
-    _txt(top, "JOGADOR  •  " + selected.to_upper(), Vector2(205,17), Vector2(300,30), 17)
-    var currency := _txt(top, "🪙 %d     ♦  0" % coins, Vector2(width-260,16), Vector2(240,32), 19)
+    var avatar := Panel.new()
+    avatar.position = Vector2(16,7)
+    avatar.size = Vector2(44,44)
+    avatar.add_theme_stylebox_override("panel",_style(Color(0.13,0.20,0.24),Color(0.95,0.68,0.22),8))
+    top.add_child(avatar)
+    _txt(avatar,selected.substr(0,1).to_upper(),Vector2(0,2),Vector2(44,38),27).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _txt(top,selected.to_upper(),Vector2(70,7),Vector2(180,23),17)
+    _txt(top,"NÍVEL 01  •  %d XP" % (matches_played*120),Vector2(70,30),Vector2(200,18),11).add_theme_color_override("font_color",Color(0.72,0.78,0.80))
+    var currency := _txt(top,"🪙 %d     ♦  0" % coins,Vector2(width-235,12),Vector2(215,32),18)
     currency.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
-    # Personagem 3D no centro, com laterais livres para os menus.
-    var left_x := 22.0
-    var right_x := width - 202.0
-    var side_y := 150.0
-    var side_h := 54.0
-    var side_gap := 12.0
-    var left_items := [
-        ["EVENTOS", "✦"],
-        ["LOJA", "▣"],
-        ["PERSONAGENS", "♙"],
-        ["COFRE", "▤"]
-    ]
+    # Menu lateral compacto, mantendo o personagem livre no centro.
+    var left_x := 14.0
+    var side_y := 94.0
+    var side_h := 43.0
+    var side_gap := 9.0
+    var left_items := [["EVENTOS","✦"],["LOJA","▣"],["PERSONAGENS","♙"],["COLEÇÃO","▤"]]
     for i in range(left_items.size()):
         var item:Array = left_items[i]
-        var b := _btn(ui, str(item[1]) + "  " + str(item[0]), Vector2(left_x, side_y + i*(side_h+side_gap)), Vector2(178,side_h), Color(0.12,0.16,0.19))
+        var b := _btn(ui,str(item[1])+"  "+str(item[0]),Vector2(left_x,side_y+i*(side_h+side_gap)),Vector2(150,side_h),Color(0.035,0.065,0.075,0.88))
+        b.add_theme_font_size_override("font_size",14)
         if i == 2: b.pressed.connect(_characters)
         elif i == 3: b.pressed.connect(_wardrobe)
-        elif i == 1: b.pressed.connect(_royale)
         else: b.pressed.connect(_royale)
-    var right_items := [
-        ["ARSENAL", "⚔"],
-        ["RANQUEADA", "🏆"],
-        ["TREINAMENTO", "◎"],
-        ["CONFIG.", "⚙"]
-    ]
-    for i in range(right_items.size()):
-        var item:Array = right_items[i]
-        var b := _btn(ui, str(item[1]) + "  " + str(item[0]), Vector2(right_x, side_y + i*(side_h+side_gap)), Vector2(178,side_h), Color(0.12,0.16,0.19))
-        if i == 0: b.pressed.connect(_inventory)
-        elif i == 3: b.pressed.connect(_settings)
-        else: b.pressed.connect(_start)
 
-    var event_panel := Panel.new()
-    event_panel.position = Vector2(22, height-170)
-    event_panel.size = Vector2(260,72)
-    event_panel.add_theme_stylebox_override("panel", _style(Color(0.10,0.075,0.045,0.92),Color(0.85,0.57,0.18),10))
-    ui.add_child(event_panel)
-    _txt(event_panel,"TEMPORADA PUNK",Vector2(14,8),Vector2(230,25),17).add_theme_color_override("font_color",Color(1.0,0.78,0.30))
-    _txt(event_panel,"Entre na batalha e conquiste recompensas",Vector2(14,36),Vector2(235,25),12)
-
-    # Navegação inferior no estilo de lobby de battle royale clássico.
-    var nav_y := height-78.0
-    var nav_names := ["COLEÇÃO","PERSONAGEM","ARMAS","MASCOTE"]
-    for i in range(nav_names.size()):
-        var b := _btn(ui,nav_names[i],Vector2(width*0.28+i*132.0,nav_y),Vector2(124,42),Color(0.07,0.10,0.12))
-        if i == 0: b.pressed.connect(_wardrobe)
-        elif i == 1: b.pressed.connect(_characters)
-        elif i == 2: b.pressed.connect(_inventory)
-        else: b.pressed.connect(_characters)
-    var play_w := 220.0
-    var play := _btn(ui,"▶  COMEÇAR",Vector2(width-play_w-22,height-145),Vector2(play_w,62),Color(0.82,0.39,0.055))
-    play.add_theme_font_size_override("font_size",24)
+    # Painel de modo no lado direito e botão de partida em destaque.
+    var right_w := 194.0
+    var right_x := width-right_w-14.0
+    var mode_panel := Panel.new()
+    mode_panel.position = Vector2(right_x, height-184.0)
+    mode_panel.size = Vector2(right_w, 112)
+    mode_panel.add_theme_stylebox_override("panel",_style(Color(0.035,0.055,0.065,0.92),Color(0.82,0.55,0.17),10))
+    ui.add_child(mode_panel)
+    _txt(mode_panel,"MODO CLÁSSICO",Vector2(12,9),Vector2(right_w-24,25),17).add_theme_color_override("font_color",Color(1.0,0.78,0.32))
+    _txt(mode_panel,"BATTLE ROYALE",Vector2(12,38),Vector2(right_w-24,22),14)
+    _txt(mode_panel,"Ilha PUNK  •  Solo",Vector2(12,68),Vector2(right_w-24,20),12).add_theme_color_override("font_color",Color(0.72,0.79,0.80))
+    var play := _btn(ui,"▶  COMEÇAR",Vector2(right_x,height-65.0),Vector2(right_w,54),Color(0.88,0.43,0.055))
+    play.add_theme_font_size_override("font_size",22)
     play.pressed.connect(_start)
-    var mode_label := _txt(ui,"BATTLE ROYALE  •  CLÁSSICO",Vector2(width-play_w-18,height-178),Vector2(play_w+10,25),14)
-    mode_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    mode_label.add_theme_color_override("font_color",Color(1.0,0.82,0.42))
-    var stats := _txt(ui,"NÍVEL 1   •   PARTIDAS %d   •   V %d   D %d   KILLS %d" % [matches_played,wins,losses,total_kills],Vector2(22,70),Vector2(440,25),13)
-    stats.add_theme_color_override("font_color",Color(0.80,0.84,0.85))
+
+    # Acesso rápido a arsenal e configurações no alto à direita.
+    var quick_y := 78.0
+    var quick_items := [["ARSENAL",_inventory],["CONFIG.",_settings]]
+    for i in range(quick_items.size()):
+        var item:Array = quick_items[i]
+        var b := _btn(ui,str(item[0]),Vector2(width-116.0,quick_y+i*43.0),Vector2(102,36),Color(0.035,0.065,0.075,0.88))
+        b.add_theme_font_size_override("font_size",12)
+        b.pressed.connect(item[1])
+
+    # Navegação inferior em faixa translúcida.
+    var nav := Panel.new()
+    nav.position = Vector2(0,height-54.0)
+    nav.size = Vector2(width-right_w-36.0,54)
+    nav.add_theme_stylebox_override("panel",_style(Color(0.025,0.035,0.045,0.86),Color(0.32,0.39,0.40),0))
+    ui.add_child(nav)
+    var nav_names := ["INÍCIO","COLEÇÃO","PERSONAGEM","ARMAS"]
+    var nav_actions := [_lobby,_wardrobe,_characters,_inventory]
+    var nav_w:float = nav.size.x/float(nav_names.size())
+    for i in range(nav_names.size()):
+        var b := _btn(nav,nav_names[i],Vector2(i*nav_w+3,7),Vector2(nav_w-6,40),Color(0.08,0.12,0.14,0.92) if i==0 else Color(0.035,0.055,0.065,0.92))
+        b.add_theme_font_size_override("font_size",12)
+        b.pressed.connect(nav_actions[i])
+
+    var notice := _txt(ui,"TEMPORADA PUNK  •  SOBREVIVA E DOMINE",Vector2(18,height-82.0),Vector2(330,22),12)
+    notice.add_theme_color_override("font_color",Color(1.0,0.78,0.34))
 
 
 func _build_lobby_showcase() -> void:
@@ -455,14 +458,38 @@ func _build_lobby_showcase() -> void:
     var model := Node3D.new()
     model.name = "LobbyCharacter"
     model.position = Vector3(0,1.02,0)
+    model.scale = Vector3(1.28,1.28,1.28)
     stage.add_child(model)
     _build_player_armor(model)
     _build_weapon_model(model)
+    # Cenário de lobby amplo com piso, placas industriais e luzes de recorte.
+    var floor := MeshInstance3D.new()
+    var floor_mesh := PlaneMesh.new()
+    floor_mesh.size = Vector2(34,34)
+    floor_mesh.material = _mat(Color(0.16,0.20,0.19),0.92)
+    floor.mesh = floor_mesh
+    floor.position = Vector3(0,-0.20,0)
+    stage.add_child(floor)
+    for side in [-1.0,1.0]:
+        var pillar := MeshInstance3D.new()
+        var pillar_mesh := BoxMesh.new()
+        pillar_mesh.size = Vector3(0.34,4.8,0.42)
+        pillar_mesh.material = _mat(Color(0.075,0.10,0.12),0.48,0.45)
+        pillar.mesh = pillar_mesh
+        pillar.position = Vector3(side*3.15,1.8,-1.0)
+        stage.add_child(pillar)
+        var strip := MeshInstance3D.new()
+        var strip_mesh := BoxMesh.new()
+        strip_mesh.size = Vector3(0.07,3.8,0.05)
+        strip_mesh.material = _mat(Color(0.95,0.48,0.12),0.28,0.35)
+        strip.mesh = strip_mesh
+        strip.position = Vector3(side*2.92,1.8,-0.76)
+        stage.add_child(strip)
     var lobby_camera := get_node_or_null("LobbyCamera") as Camera3D
     if lobby_camera:
-        lobby_camera.position = Vector3(0,1.65,6.2)
-        lobby_camera.look_at(Vector3(0,0.95,0),Vector3.UP)
-        lobby_camera.fov = 43.0
+        lobby_camera.position = Vector3(0,1.52,4.65)
+        lobby_camera.look_at(Vector3(0,0.92,0),Vector3.UP)
+        lobby_camera.fov = 37.0
         lobby_camera.current = true
         camera = lobby_camera
 
