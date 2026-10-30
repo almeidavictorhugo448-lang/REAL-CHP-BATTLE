@@ -145,6 +145,12 @@ func _ready() -> void:
     _world_lighting()
     _lobby()
 
+func _process(delta:float) -> void:
+    if mode == "lobby" or mode == "wardrobe" or mode == "characters":
+        var showcase := get_node_or_null("LobbyShowcase/LobbyCharacter") as Node3D
+        if showcase:
+            showcase.rotation.y += delta * 0.20
+
 func _load_settings() -> void:
     var config := ConfigFile.new()
     if config.load("user://punk_settings.cfg") != OK:
@@ -414,6 +420,7 @@ func _build_lobby_showcase() -> void:
     panel.material = _mat(Color(0.055,0.075,0.085))
     backdrop.mesh = panel
     backdrop.position = Vector3(0,2.1,-1.7)
+    backdrop.rotation_degrees.x = 90.0
     stage.add_child(backdrop)
     var model := Node3D.new()
     model.name = "LobbyCharacter"
@@ -477,10 +484,15 @@ func _wardrobe() -> void:
         preview.size = Vector2(minf(94.0,card_w*0.30),card_h-20.0)
         preview.add_theme_stylebox_override("panel",_style(tint,Color(0.85,0.78,0.60),8))
         card.add_child(preview)
-        var glyphs := {"Conjuntos":"♟","Cabeças":"♙","Máscaras":"◉","Peitorais":"▰","Calças":"╫","Sapatos":"▱","Emotes":"★"}
-        var icon := _txt(preview,String(glyphs.get(wardrobe_category,"✦")),Vector2(0,preview.size.y*0.24),Vector2(preview.size.x,55),42)
-        icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        icon.add_theme_color_override("font_color",Color(1.0,0.88,0.60))
+        var art_names := {"Conjuntos":"conjuntos","Cabeças":"cabecas","Máscaras":"mascaras","Peitorais":"peitorais","Calças":"calcas","Sapatos":"sapatos","Emotes":"emotes"}
+        var artwork := TextureRect.new()
+        artwork.texture = load("res://assets/wardrobe/"+String(art_names.get(wardrobe_category,"conjuntos"))+".svg")
+        artwork.position = Vector2(0,8)
+        artwork.size = Vector2(preview.size.x,preview.size.x)
+        artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+        artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        preview.add_child(artwork)
         var name_label := _txt(card,item,Vector2(preview.size.x+22,18),Vector2(card_w-preview.size.x-34,54),15)
         name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
         var status := "EQUIPADO ✓" if selected_item else "TOCAR PARA EQUIPAR"
