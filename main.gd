@@ -986,13 +986,20 @@ func _reload() -> void:
     reload_tick=float(weapon_reload.get(active_weapon,1.5))
     reload_total=reload_tick
     _toast("RECARREGANDO "+active_weapon+"...")
+func _max_player_hp() -> float:
+    return float(chars.get(selected, chars["Kosmos"]).get("hp", MAX_HP))
+
 func _medkit() -> void:
-    if medkits>0 and hp<MAX_HP: medkits-=1; hp=minf(MAX_HP,hp+50); _toast("KIT MÉDICO +50")
+    var max_hp := _max_player_hp()
+    if medkits > 0 and hp < max_hp and not match_done:
+        medkits -= 1
+        hp = minf(max_hp, hp + 50.0)
+        _toast("KIT MÉDICO +50")
 func _ability() -> void:
     if ability_cd>0 or match_done: return
     match selected:
-        "Kosmos": hp=250; shield=90; ability_tick=30
-        "Danilo": hp=minf(250,hp+50); ability_tick=30
+        "Kosmos": hp=minf(_max_player_hp(),hp+50.0); shield=90; ability_tick=30
+        "Danilo": hp=minf(_max_player_hp(),hp+50.0); ability_tick=30
         "Cuíca": ability_tick=20
         "Lucas": ability_tick=8
         "Marli": ability_tick=15
