@@ -113,6 +113,7 @@ var skins := {
 
 func _ready() -> void:
     _load_settings()
+    _load_profile()
     _world_lighting()
     _lobby()
 
@@ -122,6 +123,49 @@ func _load_settings() -> void:
         return
     for name in sensitivities.keys():
         sensitivities[name] = clampf(float(config.get_value("sensitivities", name, sensitivities[name])), 0.0, 200.0)
+
+func _load_profile() -> void:
+    var config := ConfigFile.new()
+    if config.load("user://punk_profile.cfg") != OK:
+        return
+    coins = maxi(0, int(config.get_value("profile", "coins", coins)))
+    var saved_character := String(config.get_value("profile", "selected", selected))
+    if chars.has(saved_character):
+        selected = saved_character
+    skin = String(config.get_value("profile", "skin", skin))
+    if skins.has(selected) and not skin in skins[selected]:
+        skin = skins[selected][0]
+    active_weapon = String(config.get_value("profile", "active_weapon", active_weapon))
+    if not active_weapon in weapon_catalog:
+        active_weapon = weapon_catalog[0]
+    var saved_wardrobe = config.get_value("profile", "wardrobe_equipped", wardrobe_equipped)
+    if saved_wardrobe is Dictionary:
+        for category in wardrobe_categories:
+            if saved_wardrobe.has(category):
+                wardrobe_equipped[category] = String(saved_wardrobe[category])
+    var saved_owned = config.get_value("profile", "weapon_skin_owned", weapon_skin_owned)
+    if saved_owned is Dictionary:
+        for weapon in weapon_catalog:
+            if saved_owned.has(weapon) and saved_owned[weapon] is Array:
+                weapon_skin_owned[weapon] = saved_owned[weapon].duplicate()
+    var saved_equipped = config.get_value("profile", "weapon_skin_equipped", weapon_skin_equipped)
+    if saved_equipped is Dictionary:
+        for weapon in weapon_catalog:
+            if saved_equipped.has(weapon) and saved_equipped[weapon] in weapon_skin_owned[weapon]:
+                weapon_skin_equipped[weapon] = String(saved_equipped[weapon])
+
+func _save_profile() -> void:
+    var config := ConfigFile.new()
+    config.set_value("profile", "coins", coins)
+    config.set_value("profile", "selected", selected)
+    config.set_value("profile", "skin", skin)
+    config.set_value("profile", "active_weapon", active_weapon)
+    config.set_value("profile", "wardrobe_equipped", wardrobe_equipped)
+    config.set_value("profile", "weapon_skin_owned", weapon_skin_owned)
+    config.set_value("profile", "weapon_skin_equipped", weapon_skin_equipped)
+    var error := config.save("user://punk_profile.cfg")
+    if error != OK:
+        push_warning("Não foi possível salvar o perfil: %s" % error)
 
 func _save_settings() -> void:
     var config := ConfigFile.new()
@@ -293,6 +337,7 @@ func _wardrobe_category(category:String) -> void:
 
 func _equip_wardrobe(item:String) -> void:
     wardrobe_equipped[wardrobe_category] = item
+    _save_profile()
     _toast("EQUIPADO: "+item)
     _wardrobe()
 
@@ -329,6 +374,7 @@ func _royale_claim(item:String) -> void:
         return
     coins -= 100
     wardrobe_equipped["Conjuntos" if royale_tab=="Roupas" else ("Emotes" if royale_tab=="Emotes" else "Conjuntos")] = item
+    _save_profile()
     _toast("RECOMPENSA DESBLOQUEADA: "+item)
     _royale()
 
@@ -349,8 +395,8 @@ func _characters() -> void:
     var back:=_btn(ui,"← VOLTAR",Vector2(30,get_viewport().size.y-72),Vector2(150,50),Color(0.18,0.20,0.24)); back.pressed.connect(_lobby)
     var go:=_btn(ui,"▶ JOGAR COM "+selected,Vector2(get_viewport().size.x-310,get_viewport().size.y-72),Vector2(280,50),Color(0.08,0.50,0.37)); go.pressed.connect(_start)
 
-func _pick_char(n:String) -> void: selected=n; skin=skins[n][0]; _characters()
-func _pick_skin(s:String) -> void: skin=s; _characters()
+func _pick_char(n:String) -> void: selected=n; skin=skins[n][0]; _save_profile(); _characters()
+func _pick_skin(s:String) -> void: skin=s; _save_profile(); _characters()
 
 func _inventory() -> void:
     mode = "inventory"
@@ -399,17 +445,20 @@ func _inventory() -> void:
 
 func _select_weapon(w: String) -> void:
     active_weapon = w
+    _save_profile()
     _inventory()
 
 func _weapon_skin_action(sn: String) -> void:
     if sn in weapon_skin_owned[active_weapon]:
         weapon_skin_equipped[active_weapon] = sn
+        _save_profile()
         _refresh_weapon_model()
         _inventory()
     elif coins >= 100:
         coins -= 100
         weapon_skin_owned[active_weapon].append(sn)
         weapon_skin_equipped[active_weapon] = sn
+        _save_profile()
         _refresh_weapon_model()
         _inventory()
     else:
@@ -857,6 +906,7 @@ func _shoot() -> void:
     if bot_hp[id]<=0:
         kills+=1
         coins+=10
+        _save_profile()
         _drop_death_loot(target.global_position,bot_inventory.get(id,{}))
         bot_inventory.erase(id)
         bots.erase(target)
@@ -960,6 +1010,7 @@ func _toast(t:String)->void:
     tw.tween_property(toast, "modulate:a", 0.0, 0.6)
 func _end(win:bool)->void:
     match_done=true; if win: coins+=100
+    _save_profile()
     var p:=Panel.new(); p.position=Vector2(get_viewport().size.x/2-190,get_viewport().size.y/2-145); p.size=Vector2(380,290); p.add_theme_stylebox_override("panel",_style(Color(0.015,0.03,0.05,0.98),Color(0.30,0.82,0.70),20)); battle_ui.add_child(p)
     var t:=_txt(p,"VITÓRIA!" if win else "ELIMINADO",Vector2(0,35),Vector2(380,50),30); t.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
     var s:=_txt(p,"Kills: %d\n🪙 %d"%[kills,coins],Vector2(0,100),Vector2(380,70),20); s.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
