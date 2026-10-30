@@ -662,21 +662,42 @@ func _look(r:Vector2) -> void:
 
 func _shoot() -> void:
     if shot_tick>0 or reload_tick>0 or match_done: return
-    if ammo<=0: _reload(); return
-    shot_tick=float(weapon_cadence.get(active_weapon,0.13)); ammo-=1
-    var a:=camera.global_position
-    var z:=a+(-camera.global_transform.basis.z)*110
-    var q:=PhysicsRayQueryParameters3D.create(a,z)
-    q.exclude=[player]
-    var hit:=get_world_3d().direct_space_state.intersect_ray(q)
-    if hit:
-        var obj=hit.get("collider")
-        if obj and obj in bots:
-            var id:=obj.get_instance_id(); var dmg:=float(weapon_damage.get(active_weapon,28.0))
-            if selected=="Kosmos" and ability_tick>0: dmg=39
-            if selected=="Cuíca" and ability_tick>0: dmg=34+kills*2
-            bot_hp[id]=float(bot_hp.get(id,100))-dmg
-            if bot_hp[id]<=0: kills+=1; coins+=10; bots.erase(obj); bot_hp.erase(id); bot_t.erase(id); obj.queue_free(); _toast("ELIMINAÇÃO +10 🪙")
+    if ammo<=0:
+        _reload()
+        return
+    shot_tick=float(weapon_cadence.get(active_weapon,0.13))
+    ammo-=1
+    var origin:=camera.global_position
+    var direction:Vector3=-camera.global_transform.basis.z
+    var spread:=0.0
+    match active_weapon:
+        "Águia do Deserto": spread=0.018
+        "M1014": spread=0.055
+        "MP40": spread=0.032
+    direction=(direction+Vector3(randf_range(-spread,spread),randf_range(-spread,spread),0)).normalized()
+    var query:=PhysicsRayQueryParameters3D.create(origin,origin+direction*110.0)
+    query.exclude=[player]
+    var hit:=get_world_3d().direct_space_state.intersect_ray(query)
+    if hit.is_empty():
+        return
+    var target=hit.get("collider")
+    if target == null or not bots.has(target):
+        return
+    var id:=target.get_instance_id()
+    var damage:=float(weapon_damage.get(active_weapon,28.0))
+    if active_weapon=="M1014":
+        damage*=maxf(0.35,1.0-origin.distance_to(target.global_position)/32.0)
+    if selected=="Kosmos" and ability_tick>0: damage=39
+    if selected=="Cuíca" and ability_tick>0: damage=34+kills*2
+    bot_hp[id]=float(bot_hp.get(id,100.0))-damage
+    if bot_hp[id]<=0:
+        kills+=1
+        coins+=10
+        bots.erase(target)
+        bot_hp.erase(id)
+        bot_t.erase(id)
+        target.queue_free()
+        _toast("ELIMINAÇÃO +10 🪙")
 
 func _refresh_weapon_model() -> void:
     if not is_instance_valid(player): return
