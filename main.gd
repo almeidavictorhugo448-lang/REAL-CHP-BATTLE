@@ -358,7 +358,7 @@ func _wardrobe() -> void:
     _bg(Color(0.018,0.012,0.035))
     _txt(ui,"COFRE  /  MODA",Vector2(24,18),Vector2(500,42),30).add_theme_color_override("font_color",Color(1.0,0.78,0.22))
     _txt(ui,"PERSONAGEM: "+selected+"  •  VISUAIS EQUIPADOS",Vector2(26,60),Vector2(700,28),15)
-    var width := get_viewport().size.x
+    var width: float = get_viewport().size.x
     for i in range(wardrobe_categories.size()):
         var cat:String = wardrobe_categories[i]
         var col := i % 2
@@ -404,7 +404,7 @@ func _royale() -> void:
         b.pressed.connect(_royale_select_tab.bind(tabs[i]))
     for i in range(6):
         var item:String = royale_items[(i+tabs.find(royale_tab)*2)%royale_items.size()]
-        var x := 22+(i%2)*(get_viewport().size.x/2)
+        var x: float = 22.0 + float(i % 2) * (get_viewport().size.x / 2.0)
         var y := 170+int(i/2)*125
         var card:=Panel.new()
         card.position=Vector2(x,y); card.size=Vector2(get_viewport().size.x/2-34,108)
@@ -460,7 +460,7 @@ func _inventory() -> void:
     var width := get_viewport().size.x
     for i in range(weapon_catalog.size()):
         var w: String = weapon_catalog[i]
-        var bw := width / 5.0 - 8.0
+        var bw: float = width / 5.0 - 8.0
         var b := _btn(ui, w, Vector2(8 + i * width / 5.0, 139), Vector2(bw, 46), Color(0.08, 0.50, 0.37) if active_weapon == w else Color(0.12, 0.25, 0.32))
         b.pressed.connect(_select_weapon.bind(w))
 
@@ -1074,8 +1074,8 @@ func _update_bots(delta:float) -> void:
         if not is_instance_valid(b):
             bots.erase(b)
             continue
-        var v:=player.global_position-b.global_position
-        var dist:=v.length()
+        var v: Vector3 = player.global_position - b.global_position
+        var dist: float = v.length()
         if dist<32 and dist>5:
             var d:=Vector3(v.x,0,v.z).normalized()
             var sp:=2.8
@@ -1085,7 +1085,7 @@ func _update_bots(delta:float) -> void:
             b.velocity.z=d.z*sp
             b.rotation.y=atan2(-d.x,-d.z)
             b.move_and_slide()
-        var id:=b.get_instance_id()
+        var id: int = b.get_instance_id()
         bot_t[id]=float(bot_t.get(id,1.4))-delta
         # Rivais conseguem atacar a uma distância maior; dano diminui de longe.
         if dist<22 and float(bot_t[id])<=0:
@@ -1101,7 +1101,7 @@ func _unhandled_input(e:InputEvent) -> void:
     elif e is InputEventMouseButton and e.button_index==MOUSE_BUTTON_LEFT and e.pressed: _shoot()
     elif e is InputEventScreenTouch:
         if e.pressed:
-            var w:=get_viewport().size.x
+            var w: float = get_viewport().size.x
             if e.position.x<w*0.42: joy_id=e.index; joy_start=e.position; joy_pos=e.position
             elif e.position.x>w*0.76 and e.position.y>get_viewport().size.y*0.45: _shoot()
             else: look_id=e.index
@@ -1173,7 +1173,7 @@ func _shoot() -> void:
     if target == null or not bots.has(target):
         return
     hit_marker.visible=true; hit_marker.text="✕"; hit_marker_tick=0.16
-    var id:=target.get_instance_id()
+    var id: int = target.get_instance_id()
     var damage:=float(weapon_damage.get(active_weapon,28.0))
     if active_weapon=="M1014":
         damage*=maxf(0.35,1.0-origin.distance_to(target.global_position)/32.0)
@@ -1181,7 +1181,7 @@ func _shoot() -> void:
     if selected=="Cuíca" and ability_tick>0: damage=34+kills*2
     # Acerto na parte superior da cápsula causa dano crítico.
     var impact:Vector3=hit.get("position",target.global_position)
-    var headshot:=impact.y>target.global_position.y+0.55
+    var headshot: bool = impact.y > target.global_position.y + 0.55
     if headshot:
         damage*=1.5
         hit_marker.text="✕ HS"
