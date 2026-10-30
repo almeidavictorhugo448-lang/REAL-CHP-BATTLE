@@ -482,15 +482,21 @@ func _build_weapon_model(parent:Node3D)->void:
     parent.add_child(weapon)
     var metal:=Color(0.055,0.065,0.075)
     var accent:=Color(0.95,0.48,0.10)
-    if skin=="Dragão de Fogo":
+    var equipped_skin:String=String(weapon_skin_equipped.get(active_weapon,"Original"))
+    if equipped_skin=="Dragão de Fogo":
         accent=Color(1.0,0.12,0.025)
-    elif skin=="Gelo Eterno":
+    elif equipped_skin=="Gelo Eterno":
         accent=Color(0.25,0.86,1.0)
-    elif skin=="Ouro Imperial":
+    elif equipped_skin=="Ouro Imperial":
         accent=Color(1.0,0.72,0.12)
         metal=Color(0.22,0.16,0.055)
-    elif skin=="Neon Roxo":
+    elif equipped_skin=="Neon Roxo":
         accent=Color(0.78,0.18,1.0)
+    match active_weapon:
+        "XM8": accent=accent.lerp(Color(0.15,0.8,0.72),0.35)
+        "Águia do Deserto": accent=accent.lerp(Color(0.8,0.72,0.5),0.35)
+        "M1014": accent=accent.lerp(Color(0.65,0.3,0.12),0.35)
+        "MP40": accent=accent.lerp(Color(0.35,0.55,0.9),0.35)
     _box(weapon,Vector3(0.13,0.13,0.78),Vector3(0,0,-0.10),_mat(metal,0.28,0.65))
     _box(weapon,Vector3(0.16,0.18,0.36),Vector3(0,0.015,0.12),_mat(accent,0.3,0.45))
     _box(weapon,Vector3(0.10,0.28,0.16),Vector3(0,-0.19,0.10),_mat(metal,0.4,0.5))
@@ -663,6 +669,9 @@ func _switch_weapon() -> void:
     if weapon_catalog.is_empty(): return
     var index=weapon_catalog.find(active_weapon)
     active_weapon=weapon_catalog[(index+1)%weapon_catalog.size()]
+    var old_model=player.get_node_or_null("WeaponModel")
+    if old_model: old_model.queue_free()
+    _build_weapon_model(player)
     ammo=MAG
     reload_tick=0.0
     _hud()
