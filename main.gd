@@ -70,6 +70,7 @@ var reload_tick := 0.0
 var reload_total := 0.0
 var ability_tick := 0.0
 var ability_cd := 0.0
+var aim_assist_tick := 0.0
 var medkits := 3
 var match_done := false
 var match_paused := false
@@ -1668,6 +1669,11 @@ func _look(r:Vector2) -> void:
 
 func _aim_assist(delta:float) -> void:
     if not aim_held or bots.is_empty() or not is_instance_valid(camera): return
+    aim_assist_tick -= delta
+    if aim_assist_tick > 0.0:
+        return
+    # A busca de alvos usa raycasts em frequência limitada para poupar CPU mobile.
+    aim_assist_tick = 0.08
     var forward:Vector3=-camera.global_transform.basis.z
     var best:CharacterBody3D=null
     var best_distance:=INF
@@ -1690,7 +1696,7 @@ func _aim_assist(delta:float) -> void:
     var to_target:Vector3=(best.global_position+Vector3.UP*0.45)-camera.global_position
     var desired_yaw:=atan2(-to_target.x,-to_target.z)
     var desired_pitch:=atan2(to_target.y,Vector2(to_target.x,to_target.z).length())
-    var strength:=clampf(delta*5.5,0.0,0.22)
+    var strength:=clampf(delta*22.0,0.0,0.22)
     yaw=lerp_angle(yaw,desired_yaw,strength)
     pitch=lerpf(pitch,clampf(desired_pitch,-0.82,0.28),strength)
     player.rotation.y=yaw
