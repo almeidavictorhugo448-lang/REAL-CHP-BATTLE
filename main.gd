@@ -213,6 +213,18 @@ func _save_settings() -> void:
     if error != OK:
         push_warning("Não foi possível salvar as configurações: %s" % error)
 
+func _ensure_lobby_camera() -> void:
+    var lobby_camera := get_node_or_null("LobbyCamera") as Camera3D
+    if lobby_camera == null:
+        lobby_camera = Camera3D.new()
+        lobby_camera.name = "LobbyCamera"
+        lobby_camera.position = Vector3(0, 3.0, 8.0)
+        lobby_camera.rotation_degrees = Vector3(-10.0, 0.0, 0.0)
+        lobby_camera.fov = 70.0
+        add_child(lobby_camera)
+    lobby_camera.current = true
+    camera = lobby_camera
+
 func _world_lighting() -> void:
     var e := WorldEnvironment.new()
     var env := Environment.new()
@@ -288,6 +300,7 @@ func _style(bg:Color,border:Color,r:=16) -> StyleBoxFlat:
 func _lobby() -> void:
     mode = "lobby"
     _clear_world()
+    _ensure_lobby_camera()
     _reset_ui()
     _bg(Color(0.006, 0.010, 0.018, 1))
     var viewport_size := get_viewport().get_visible_rect().size
@@ -756,7 +769,10 @@ func _player() -> void:
     var c:=CollisionShape3D.new(); var s:=CapsuleShape3D.new(); s.height=1.8; s.radius=0.34; c.shape=s; player.add_child(c)
     _build_player_armor(player)
     _build_weapon_model(player)
-    camera=Camera3D.new(); camera.position=Vector3(0,2.35,5.8); camera.rotation.x=pitch; camera.fov=72; camera.current=true; player.add_child(camera)
+    var lobby_camera := get_node_or_null("LobbyCamera") as Camera3D
+    if lobby_camera:
+        lobby_camera.current = false
+    camera=Camera3D.new(); camera.name="BattleCamera"; camera.position=Vector3(0,2.35,5.8); camera.rotation.x=pitch; camera.fov=72; camera.current=true; player.add_child(camera)
     hp=chars[selected]["hp"]; shield=0; energy=MAX_ENERGY; ammo=_mag_size(); kills=0; time_left=START_TIME; zone=MAP; zone_tick=0; ability_cd=0; ability_tick=0; medkits=3; match_done=false
 
 func _bots() -> void:
