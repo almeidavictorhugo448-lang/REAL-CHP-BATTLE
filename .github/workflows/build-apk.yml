@@ -63,6 +63,17 @@ jobs:
             echo "Godot encontrou erros de script. APK bloqueado."
             exit 1
           fi
+          while IFS= read -r -d '' script; do
+            echo "Verificando: $script"
+            "$GODOT_BIN" --headless --path . --check-only --script "$script" > /tmp/godot-script-check.log 2>&1 || {
+              cat /tmp/godot-script-check.log
+              exit 1
+            }
+            if grep -E "SCRIPT ERROR:|Parse Error:|ERROR:" /tmp/godot-script-check.log; then
+              cat /tmp/godot-script-check.log
+              exit 1
+            fi
+          done < <(find . -path './.git' -prune -o -name '*.gd' -print0)
           "$GODOT_BIN" --headless --path . --quit-after 3 2>&1 | tee /tmp/godot-intro.log
           if grep -E "SCRIPT ERROR:|Parse Error:|ERROR:" /tmp/godot-intro.log; then
             echo "A cena inicial falhou. APK bloqueado."
