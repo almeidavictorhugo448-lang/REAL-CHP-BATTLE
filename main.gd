@@ -394,7 +394,7 @@ func _lobby() -> void:
 
     # Acesso rápido a arsenal e configurações no alto à direita.
     var quick_y := 78.0
-    var quick_items := [["ARSENAL",_inventory],["CONFIG.",_settings]]
+    var quick_items := [["ARSENAL",Callable(self,"_inventory")],["CONFIG.",Callable(self,"_settings")]]
     for i in range(quick_items.size()):
         var item:Array = quick_items[i]
         var b := _btn(ui,str(item[0]),Vector2(width-116.0,quick_y+i*43.0),Vector2(102,36),Color(0.035,0.065,0.075,0.88))
@@ -408,7 +408,7 @@ func _lobby() -> void:
     nav.add_theme_stylebox_override("panel",_style(Color(0.025,0.035,0.045,0.86),Color(0.32,0.39,0.40),0))
     ui.add_child(nav)
     var nav_names := ["INÍCIO","COLEÇÃO","PERSONAGEM","ARMAS"]
-    var nav_actions := [_lobby,_wardrobe,_characters,_inventory]
+    var nav_actions := [Callable(self,"_lobby"),Callable(self,"_wardrobe"),Callable(self,"_characters"),Callable(self,"_inventory")]
     var nav_w:float = nav.size.x/float(nav_names.size())
     for i in range(nav_names.size()):
         var b := _btn(nav,nav_names[i],Vector2(i*nav_w+3,7),Vector2(nav_w-6,40),Color(0.08,0.12,0.14,0.92) if i==0 else Color(0.035,0.055,0.065,0.92))
