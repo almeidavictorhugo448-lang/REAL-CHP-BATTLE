@@ -591,9 +591,11 @@ func _jump_from_aircraft() -> void:
     canopy.scale=Vector3(1.0,0.38,1.0)
     canopy.material_override=_mat(Color(0.92,0.18,0.12))
     player.add_child(canopy)
-    for control in [fire,switch_weapon,reload,ability,medkit,aim,joy_base,joy_knob]:
+    for control in [fire,switch_weapon,reload,ability,medkit,aim]:
         control.visible=false
-    _toast("PARAQUEDAS ABERTO — DESCENDO!")
+    joy_base.visible=true
+    joy_knob.visible=true
+    _toast("PARAQUEDAS ABERTO — USE O JOYSTICK PARA DIRECIONAR")
 
 func _clear_world() -> void:
     if player and is_instance_valid(player): player.queue_free()
@@ -840,8 +842,16 @@ func _physics_process(delta:float) -> void:
     if match_phase=="ready_to_jump":
         return
     if match_phase=="airborne":
-        player.velocity.x=0.0
-        player.velocity.z=0.0
+        var steer:=Vector2.ZERO
+        if joy_id!=-1:
+            steer=(joy_pos-joy_start).limit_length(58)/58
+        var forward:= -player.global_transform.basis.z
+        var right:= player.global_transform.basis.x
+        var glide:=right*steer.x+forward*(-steer.y)
+        glide.y=0.0
+        if glide.length()>1.0: glide=glide.normalized()
+        player.velocity.x=glide.x*5.0
+        player.velocity.z=glide.z*5.0
         player.velocity.y=-4.2
         player.move_and_slide()
         if player.is_on_floor() or player.global_position.y<=1.05:
