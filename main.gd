@@ -22,6 +22,7 @@ var royale_items := ["Guardião Carmesim","Anjo Cósmico","Lenda Neon","Dragão 
 var active_weapon := "UMP"
 var weapon_damage := {"UMP":28.0,"XM8":30.0,"Águia do Deserto":48.0,"M1014":22.0,"MP40":19.0}
 var weapon_cadence := {"UMP":0.13,"XM8":0.15,"Águia do Deserto":0.38,"M1014":0.48,"MP40":0.075}
+var weapon_mag := {"UMP":30,"XM8":30,"Águia do Deserto":7,"M1014":6,"MP40":32}
 var weapon_catalog := ["UMP", "XM8", "Águia do Deserto", "M1014", "MP40"]
 var weapon_skin_catalog := ["Original", "Dragão de Fogo", "Gelo Eterno", "Ouro Imperial", "Neon Roxo"]
 var weapon_skin_owned := {
@@ -511,7 +512,7 @@ func _player() -> void:
     _build_player_armor(player)
     _build_weapon_model(player)
     camera=Camera3D.new(); camera.position=Vector3(0,2.35,5.8); camera.rotation.x=pitch; camera.fov=72; camera.current=true; player.add_child(camera)
-    hp=chars[selected]["hp"]; shield=0; energy=MAX_ENERGY; ammo=MAG; kills=0; time_left=START_TIME; zone=MAP; zone_tick=0; ability_cd=0; ability_tick=0; medkits=3; match_done=false
+    hp=chars[selected]["hp"]; shield=0; energy=MAX_ENERGY; ammo=_mag_size(); kills=0; time_left=START_TIME; zone=MAP; zone_tick=0; ability_cd=0; ability_tick=0; medkits=3; match_done=false
 
 func _bots() -> void:
     var points=[Vector3(-13,1,-9),Vector3(14,1,-13),Vector3(-34,1,18),Vector3(31,1,24),Vector3(7,1,-32),Vector3(-29,1,-29),Vector3(36,1,-15),Vector3(2,1,38),Vector3(22,1,3),Vector3(-20,1,31),Vector3(40,1,5),Vector3(-40,1,2)]
@@ -667,6 +668,9 @@ func _shoot() -> void:
             bot_hp[id]=float(bot_hp.get(id,100))-dmg
             if bot_hp[id]<=0: kills+=1; coins+=10; bots.erase(obj); bot_hp.erase(id); bot_t.erase(id); obj.queue_free(); _toast("ELIMINAÇÃO +10 🪙")
 
+func _mag_size() -> int:
+    return int(weapon_mag.get(active_weapon,MAG))
+
 func _switch_weapon() -> void:
     if weapon_catalog.is_empty(): return
     var index=weapon_catalog.find(active_weapon)
@@ -680,7 +684,7 @@ func _switch_weapon() -> void:
     _toast("ARMA: "+active_weapon)
 
 func _reload() -> void:
-    if reload_tick<=0 and ammo<MAG: reload_tick=1.5; _toast("RECARREGANDO...")
+    if reload_tick<=0 and ammo<_mag_size(): reload_tick=1.5; _toast("RECARREGANDO...")
 func _medkit() -> void:
     if medkits>0 and hp<MAX_HP: medkits-=1; hp=minf(MAX_HP,hp+50); _toast("KIT MÉDICO +50")
 func _ability() -> void:
@@ -716,7 +720,7 @@ func _pickup() -> void:
             loot.erase(a); a.queue_free(); _toast("PEGOU "+k)
 func _hud() -> void:
     hp_text.text="🐉 %s  ❤️ %d  🛡 %d  ⚡ %d  💀 %d"%[selected,int(hp),int(shield),int(energy),kills]
-    ammo_text.text="%s • %s  %02d / %02d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,MAG]
+    ammo_text.text="%s • %s  %02d / %02d"%[active_weapon,weapon_skin_equipped[active_weapon],ammo,_mag_size()]
     top_text.text="RIVAIS %02d   |   TEMPO %03d"%[bots.size(),int(maxf(0,time_left))]
     zone_text.text="ZONA %.0fm"%zone
     ability.text="DRAGÃO %s"%(["PRONTO" if ability_cd<=0 else "%ds"%int(ceil(ability_cd))][0])
