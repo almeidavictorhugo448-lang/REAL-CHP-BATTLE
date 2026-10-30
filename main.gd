@@ -24,6 +24,7 @@ var weapon_damage := {"UMP":28.0,"XM8":30.0,"Águia do Deserto":48.0,"M1014":22.
 var weapon_cadence := {"UMP":0.13,"XM8":0.15,"Águia do Deserto":0.38,"M1014":0.48,"MP40":0.075}
 var weapon_mag := {"UMP":30,"XM8":30,"Águia do Deserto":7,"M1014":6,"MP40":32}
 var weapon_reload := {"UMP":1.5,"XM8":1.7,"Águia do Deserto":1.25,"M1014":1.9,"MP40":1.4}
+var weapon_spread := {"UMP":0.012,"XM8":0.009,"Águia do Deserto":0.018,"M1014":0.055,"MP40":0.032}
 var weapon_catalog := ["UMP", "XM8", "Águia do Deserto", "M1014", "MP40"]
 var weapon_skin_catalog := ["Original", "Dragão de Fogo", "Gelo Eterno", "Ouro Imperial", "Neon Roxo"]
 var weapon_skin_owned := {
@@ -669,11 +670,7 @@ func _shoot() -> void:
     ammo-=1
     var origin:=camera.global_position
     var direction:Vector3=-camera.global_transform.basis.z
-    var spread:=0.0
-    match active_weapon:
-        "Águia do Deserto": spread=0.018
-        "M1014": spread=0.055
-        "MP40": spread=0.032
+    var spread:=float(weapon_spread.get(active_weapon,0.012))
     direction=(direction+Vector3(randf_range(-spread,spread),randf_range(-spread,spread),0)).normalized()
     var query:=PhysicsRayQueryParameters3D.create(origin,origin+direction*110.0)
     query.exclude=[player]
