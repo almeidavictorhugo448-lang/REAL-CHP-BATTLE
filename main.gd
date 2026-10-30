@@ -566,7 +566,7 @@ func _build_lobby_showcase() -> void:
     # Palmeiras estilizadas nas laterais, deixando o personagem livre no centro.
     for side in [-1.0,1.0]:
         for i in range(3):
-            var px := side*(11.0+float(i%2)*4.0)
+            var px: float = side*(11.0+float(i%2)*4.0)
             var pz := -3.0-float(i)*6.0
             var trunk := MeshInstance3D.new()
             var trunk_mesh := CylinderMesh.new()
