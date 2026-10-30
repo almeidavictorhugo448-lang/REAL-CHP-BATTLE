@@ -62,6 +62,7 @@ var total_kills := 0
 var best_kills := 0
 var coins := 250
 var time_left := START_TIME
+var overtime_started := false
 var zone := MAP
 var zone_tick := 0.0
 var shot_tick := 0.0
@@ -700,6 +701,7 @@ func _start() -> void:
     ammo=_mag_size()
     weapon_ammo[active_weapon]=ammo
     time_left=START_TIME
+    overtime_started=false
     zone=MAP
     zone_tick=0.0
     shot_tick=0.0
@@ -1459,7 +1461,10 @@ func _physics_process(delta:float) -> void:
     camera.rotation.x=clampf(pitch-recoil_kick,-0.82,0.28)
     ability_cd=maxf(0,ability_cd-delta)
     ability_tick=maxf(0,ability_tick-delta)
-    time_left-=delta
+    time_left=maxf(0.0,time_left-delta)
+    if time_left<=0.0 and not overtime_started:
+        overtime_started=true
+        _toast("TEMPO ESGOTADO — ELIMINE TODOS OS RIVAIS!")
     zone_tick+=delta
     energy=minf(MAX_ENERGY,energy+delta*4)
     # Disparo continuo ao manter o botao pressionado, respeitando o intervalo da arma.
@@ -1476,12 +1481,12 @@ func _physics_process(delta:float) -> void:
     if not airdrop_spawned and time_left <= START_TIME - 90.0:
         airdrop_spawned=true
         _spawn_airdrop()
-    if zone_tick>12:
+    var zone_interval:float = 5.0 if overtime_started else 12.0
+    if zone_tick>zone_interval:
         zone_tick=0
-        zone=maxf(18,zone-1.6)
+        zone=maxf(5.0,zone-(3.2 if overtime_started else 1.6))
     _move(delta); _update_bots(delta); _aim_assist(delta); _pickup(); _hud()
     if player.global_position.length()>zone: _damage(5*delta)
-    if time_left<=0 and not match_done: _end(true)
 
 func _move(delta:float) -> void:
     var input:=Vector2.ZERO
@@ -1519,7 +1524,7 @@ func _update_bots(delta:float) -> void:
 
         # IA simples de combate: aproxima, recua quando pressionada e muda
         # ligeiramente de lado para não avançar em linha reta como um alvo parado.
-        if dist < 38.0 and dist > 0.01:
+        if (dist < 38.0 or overtime_started) and dist > 0.01:
             var strafe_sign := 1.0 if int(id % 2) == 0 else -1.0
             var strafe := Vector3(-to_player.z, 0.0, to_player.x) * strafe_sign
             var move_dir := Vector3.ZERO
@@ -1530,7 +1535,7 @@ func _update_bots(delta:float) -> void:
             else:
                 move_dir = strafe * 0.52
             move_dir = move_dir.normalized()
-            var speed := 2.9
+            var speed:float = 4.0 if overtime_started else 2.9
             if selected == "Lucas" and ability_tick > 0:
                 speed = 1.45
             b.velocity.x = move_dir.x * speed
@@ -1800,7 +1805,7 @@ func _hud() -> void:
     if reload_tick>0:
         var progress:=clampf(1.0-reload_tick/maxf(0.01,reload_total),0.0,1.0)
         reload_text.text="RECARREGANDO  %d%%"%int(progress*100.0)
-    top_text.text="RIVAIS %02d   |   TEMPO %03d"%[bots.size(),int(maxf(0,time_left))]
+    top_text.text=("RIVAIS %02d   |   PRORROGAÇÃO"%bots.size()) if overtime_started else "RIVAIS %02d   |   TEMPO %03d"%[bots.size(),int(maxf(0,time_left))]
     zone_text.text="ZONA %.0fm"%zone
     ability.text="DRAGÃO %s"%(["PRONTO" if ability_cd<=0 else "%ds"%int(ceil(ability_cd))][0])
     ability.disabled=ability_cd>0
