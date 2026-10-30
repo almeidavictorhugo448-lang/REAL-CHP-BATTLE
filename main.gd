@@ -645,7 +645,11 @@ func _shoot() -> void:
     if shot_tick>0 or reload_tick>0 or match_done: return
     if ammo<=0: _reload(); return
     shot_tick=0.13; ammo-=1
-    var a:=camera.global_position; var z:=a+(-camera.global_transform.basis.z)*110; var q:=PhysicsRayQueryParameters3D.create(a,z); q.exclude=[player]; var hit:=get_world_3d().direct_space_state.intersect_ray(q)
+    var a:=camera.global_position
+    var z:=a+(-camera.global_transform.basis.z)*110
+    var q:=PhysicsRayQueryParameters3D.create(a,z)
+    q.exclude=[player]
+    var hit:=get_world_3d().direct_space_state.intersect_ray(q)
     if hit:
         var obj=hit.get("collider")
         if obj and obj in bots:
